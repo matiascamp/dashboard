@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { useState } from "react"
+// import { useState } from "react"
 
 
 const SideBar = () => {
@@ -11,7 +11,7 @@ const SideBar = () => {
                 Nombre de usuario
             </div>
             <div className="flex flex-col gap-5">
-                <Link href="/debts">
+                <Link href="/movements">
                     Asiento contable
                 </Link>
                 <Link href="/">

@@ -1,8 +1,8 @@
 'use client'
-import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, CellContext, getSortedRowModel, SortingState,getFilteredRowModel } from '@tanstack/react-table'
+import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel, getSortedRowModel, SortingState, getFilteredRowModel } from '@tanstack/react-table'
+import { useMemo, useState } from 'react';
 import dayjs from 'dayjs'
-import { useState } from 'react';
-
+import Link from 'next/link';
 
 
 type Test = {
@@ -65,46 +65,34 @@ const testData: Test[] = [
     { id: 50, nombre: "notaria", descripcion: "Trámites notariales y documentos", monto: 1100, fecha: "2025-02-19" }
 ]
 
+type columns = {
+    accessorKey: string;
+    header: string;
+}
 
 
 
-const columns = [
-    {
-        accessorKey: 'id',
-        header: 'Id',
-        cell: (info: CellContext<Test, unknown>) => info.getValue()
-    },
-    {
-        accessorKey: 'nombre',
-        header: 'Nombre',
-        cell: (info: CellContext<Test, unknown>) => info.getValue()
-    },
-    {
-        accessorKey: 'descripcion',
-        header: 'Descripción',
-        cell: (info: CellContext<Test, unknown>) => info.getValue()
-    },
-    {
-        accessorKey: 'monto',
-        header: 'Monto',
-        cell: (info: CellContext<Test, unknown>) => info.getValue()
-    },
-    {
-        accessorKey: 'fecha',
-        header: 'Fecha',
-        cell: (info: CellContext<Test, unknown>) => dayjs(info.getValue() as string).format("DD/MM/YYYY")
-    }
-]
-
-const Table = () => {
+const Table = ({ columns }: { columns: columns[] }) => {
     const data = testData
 
     const [sorting, setSorting] = useState<SortingState>([])
-    const [filter,setFilter] = useState("")
+    const [filter, setFilter] = useState("")
+
+
+    const columnsTable = useMemo(() => columns.map(col => ({
+        header: col.header,
+        accessorKey: col.accessorKey,
+        cell: (info) => {
+            if (col.accessorKey === "fecha") return dayjs(info.getValue()).format("DD/MM/YYYY")
+            if (col.accessorKey === "detalle") return <Link href={"/"}>Ir a detalle</Link>
+            return info.getValue()
+        }
+    })), [columns])
+
 
     const table = useReactTable({
         data,
-        columns,
+        columns: columnsTable,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
@@ -117,30 +105,31 @@ const Table = () => {
         onGlobalFilterChange: setFilter
     })
 
+
     return (
         <div className='p-10'>
-            <input className='border border-gray-300' type="text" value={filter} onChange={e => setFilter(e.target.value)} placeholder='Buscar...'/>
-            <table className='border border-gray-300 w-full'>
-                <thead className='bg-black text-white p-1'>
+            <input className='border border-gray-300' type="text" value={filter} onChange={e => setFilter(String(e.target.value))} placeholder='Buscar...' />
+            <table className='border border-gray-300 w-auto min-w-2xl'>
+                <thead className='bg-black text-white w-full'>
                     {table.getHeaderGroups().map(headerGroup => (
-                        <tr key={headerGroup.id}>
+                        <tr key={headerGroup.id} className='w-full'>
                             {headerGroup.headers.map(header => (
                                 <th className='text-start'
-                                 key={header.id} 
-                                 onClick={header.column.getToggleSortingHandler()}>
-                                    {header.isPlaceholder ?  null : (
-                                            <div>
-                                                {flexRender(
-                                                    header.column.columnDef.header, 
-                                                    header.getContext()
-                                                )}
+                                    key={header.id}
+                                    onClick={header.column.getToggleSortingHandler()}>
+                                    {header.isPlaceholder ? null : (
+                                        <div>
+                                            {flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                            {
                                                 {
-                                                    {
-                                                        asc: ' ↑',
-                                                        desc: ' ↓'
-                                                    }[header.column.getIsSorted() as string] ?? null
-                                                }
-                                            </div>
+                                                    asc: ' ↑',
+                                                    desc: ' ↓'
+                                                }[header.column.getIsSorted() as string] ?? null
+                                            }
+                                        </div>
                                     )}
                                 </th>
                             ))}
@@ -150,10 +139,10 @@ const Table = () => {
                 <tbody>
                     {
                         table.getRowModel().rows.map(row => (
-                            <tr className='' key={row.id}>
+                            <tr  key={row.id}>
                                 {
                                     row.getVisibleCells().map(cell => (
-                                        <td key={cell.id}>
+                                        <td key={cell.id} >
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </td>
                                     ))
@@ -164,18 +153,42 @@ const Table = () => {
                 </tbody>
             </table>
             <div className='flex gap-5 p-2'>
-            <button className='border border-gray-200 p-1 cursor-pointer' onClick={() => table.setPageIndex(0)}>
-                Primer pagina
-            </button>
-            <button className='border border-gray-200 p-1 cursor-pointer'onClick={() => table.previousPage()}>
-                Anterior
-            </button>
-            <button className='border border-gray-200 p-1 cursor-pointer'onClick={() => table.nextPage()}>
-                Siguiente
-            </button>
-            <button className='border border-gray-200 p-1 cursor-pointer' onClick={() => table.setPageIndex(table.getPageCount() - 1)}>
-                Ultima pagina
-            </button>
+                <button className='border border-gray-200 p-1 cursor-pointer' onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+                    Primer pagina
+                </button>
+                <button className='border border-gray-200 p-1 cursor-pointer' onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+                    {'<'}
+                </button>
+                <button className='border border-gray-200 p-1 cursor-pointer' onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+                    {'>'}
+                </button>
+                <button className='border border-gray-200 p-1 cursor-pointer' onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+                    Ultima pagina
+                </button>
+                <select
+                    value={table.getState().pagination.pageSize}
+                    onChange={e => {
+                        table.setPageSize(Number(e.target.value))
+                    }}
+                >
+                    {[10, 20, 30, 40, 50].map(pageSize => (
+                        <option key={pageSize} value={pageSize}>
+                            Mostrar {pageSize} filas
+                        </option>
+                    ))}
+                </select>
+                <span className="flex items-center gap-1">
+                    | Ir a la pagina:
+                    <input
+                        type="number"
+                        defaultValue={table.getState().pagination.pageIndex + 1}
+                        onChange={e => {
+                            const page = e.target.value ? Number(e.target.value) - 1 : 0
+                            table.setPageIndex(page)
+                        }}
+                        className="border p-1 rounded w-16"
+                    />
+                </span>
             </div>
         </div>
     )
