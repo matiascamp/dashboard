@@ -14,7 +14,7 @@ const SideBar = () => {
                 <Link href="/movements">
                     Asiento contable
                 </Link>
-                <Link href="/">
+                <Link href="/budgets">
                     Presupuestos
                 </Link>
             </div>

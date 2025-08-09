@@ -6,28 +6,30 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model MonthlySummary {
-  id        Int               @id @default(autoincrement())
-  fecha     DateTime
-  debe      Float
-  haber     Float
-  detalles  MovementDetail[]  // relación 1:N
+  id      Int   @id @default(autoincrement())
+  month   Int // Mes en número (1-12)
+  year    Int
+  debit   Float @default(0)
+  havings Float @default(0)
+
+  details Detail[] // Relación con los movimientos
 }
 
-model MovementDetail {
-  id             Int            @id @default(autoincrement())
-  monto          Float
-  descripcion    String
-  fecha          DateTime
-  nombre         String
-  resumenId      Int
-  resumen        MonthlySummary @relation(fields: [resumenId], references: [id], onDelete: Cascade)
+model Detail {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  description String
+  date        DateTime
+  name        String
+
+  monthlySummaryId Int
+  monthlySummary   MonthlySummary @relation(fields: [monthlySummaryId], references: [id])
 }
