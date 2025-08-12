@@ -1,6 +1,7 @@
 
 
 interface FormData {
+  budgetId: number | null;
   client: string;
   text: string;
   materialPrice: number;
@@ -25,18 +26,19 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-6">Datos del presupuesto</h2>
+      <h2 className="text-2xl font-bold mb-6">Datos</h2>
 
       <div className="space-y-4">
+        <label htmlFor="client">Cliente:</label>
         <input
           type="text"
           name="client"
           value={formData.client}
           onChange={handleChange}
-          placeholder="Cliente"
+          placeholder="Nombre del cliente"
           className="w-full p-3 border rounded"
         />
-
+        <label htmlFor="text">Descripción:</label>
         <textarea
           name="text"
           value={formData.text}
@@ -45,6 +47,7 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
           rows={4}
           className="w-full p-3 border rounded"
         />
+        <label htmlFor="materialPrice">Materiales:</label>
         <input
           type="text"
           name="materialPrice"
@@ -53,6 +56,7 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
           placeholder="Precio materiales"
           className="w-full p-3 border rounded"
         />
+        <label htmlFor="inputs">Insumos:</label>
         <input
           type="text"
           name="inputs"
@@ -61,6 +65,7 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
           placeholder="Insumos"
           className="w-full p-3 border rounded"
         />
+        <label htmlFor="labor">Mano de obra:</label>
         <input
           type="text"
           name="labor"
@@ -72,7 +77,7 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
         <button
           onClick={onDownload}
           disabled={isGenerating}
-          className="w-full p-3 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+          className="w-full p-3 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 mt-10"
         >
           {isGenerating ? 'Generando...' : 'Descargar PDF'}
         </button>

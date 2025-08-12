@@ -33,3 +33,10 @@ model Detail {
   monthlySummaryId Int
   monthlySummary   MonthlySummary @relation(fields: [monthlySummaryId], references: [id])
 }
+
+model Budgets {
+  id          Int      @id @default(autoincrement())
+  createdDate DateTime
+  clientName  String
+  pdfUrl      String
+}
