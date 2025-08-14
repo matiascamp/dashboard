@@ -9,7 +9,6 @@ export async function GET() {
         createdDate: 'desc',
       },
     })
-    console.log("budgets",budgets);
     
     return NextResponse.json(budgets)
   } catch (error) {

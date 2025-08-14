@@ -1,10 +1,10 @@
-import SideBar from "../components/sideBar";
+import SideBar from "@/components/sideBar";
 
 
-export default function Home() {
+const Home = () => {
   return (
-    <div className="font-sans  min-h-screen">
-      <SideBar />
-    </div>
+        <SideBar />
   );
 }
+
+export default Home

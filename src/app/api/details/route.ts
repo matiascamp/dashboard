@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'year and month are required' }, { status: 400 })
   }
   
-  const detalles = await prisma.detail.findMany({
+  const detalles = await prisma.movementDetail.findMany({
     where: {
       date: {
         gte: new Date(year, month - 1, 1),

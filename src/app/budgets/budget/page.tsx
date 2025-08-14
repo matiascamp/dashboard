@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import PdfForm from '@/components/pdf/form';
 import PdfPreview from '@/components/pdf/pdfpreview';
 
-
 interface FormData {
   budgetId: number | null;
   client: string;
@@ -12,10 +11,10 @@ interface FormData {
   materialPrice: number;
   inputs: number;
   labor: number;
-  total?: number
+  total?: number;
 }
 
-export default function Home() {
+export default function BudgetPage() {
   const [formData, setFormData] = useState<FormData>({
     budgetId: null,
     client: '',
@@ -34,14 +33,12 @@ export default function Home() {
         const response = await fetch('/api/pdf/list')
         const data = await response.json()
         if (!data) return
-  
-        console.log("data length", data.length)
+
         setFormData(prev => ({
           ...prev,
           budgetId: data.length === 0 ? 1 : data.length + 1
         }))
-  
-        console.log("Dat", data)
+
       } catch (error) {
         console.log("error", error)
       }
@@ -61,21 +58,17 @@ export default function Home() {
 
       if (!data.url) return
 
-      const createdResponse = await fetch('/api/pdf/create',{
-        method:'POST',
+      await fetch('/api/pdf/create', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           createdDate: new Date(),
-          clientName:formData.client,
+          clientName: formData.client,
           pdfUrl: data.url
         })
       })
-      const parsedResponse = await createdResponse.json()
 
-      console.log("parsedResponse",parsedResponse);
-      
-
-      window.open(data.url, '_blank');
+      window.open(data.url);
 
     } catch (error) {
       console.error('Error al generar pdf:', error);
@@ -85,17 +78,39 @@ export default function Home() {
   };
 
   return (
-    <main className="max-w-7xl mx-auto min-h-screen bg-gray-50 p-8">
-      <h1 className="text-4xl font-bold text-center mb-8">Generador de presupuesto</h1>
-      <div className=" mx-auto flex h-auto gap-7">
-        <PdfForm
-          formData={formData}
-          setFormData={setFormData}
-          onDownload={handleDownload}
-          isGenerating={isGenerating}
-        />
-        <PdfPreview formData={formData} setFormData={setFormData} />
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)]">
+      <div className="container mx-auto px-6 py-8">
+        {/* Header */}
+        <header className="text-center mb-12 animate-fade-in">
+          <h1 className="text-4xl font-bold text-[var(--foreground)] mb-4">
+            Crear Presupuesto
+          </h1>
+          <p className="text-lg text-[var(--foreground-secondary)] max-w-2xl mx-auto">
+            Complete los datos del presupuesto y visualice el resultado antes de generar el PDF final
+          </p>
+        </header>
+
+        {/* Content */}
+        <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+          {/* Form */}
+          <div className="flex-1">
+            <PdfForm
+              formData={formData}
+              setFormData={setFormData}
+              onDownload={handleDownload}
+              isGenerating={isGenerating}
+            />
+          </div>
+
+          {/* Preview */}
+          <div className="flex-1">
+            <PdfPreview 
+              formData={formData} 
+              setFormData={setFormData} 
+            />
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

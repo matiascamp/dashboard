@@ -9,14 +9,14 @@ export const GET = async () => {
         debit: number
         havings: number
       }>`
-        SELECT 
-          YEAR(date) AS year,
-          MONTH(date) AS month,
-          SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END) AS debit,
-          SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) AS havings
-        FROM Detail
-        GROUP BY year, month
-        ORDER BY year DESC, month DESC
+      SELECT
+        YEAR(date) AS year,
+        MONTH(date) AS month,
+        SUM(CASE WHEN type = 'egreso' THEN amount ELSE 0 END) AS debit,
+        SUM(CASE WHEN type = 'ingreso' THEN amount ELSE 0 END) AS havings
+      FROM MovementDetail
+      GROUP BY year, month
+      ORDER BY year DESC, month DESC
       `
 
       const resumenConvertido = resumen.map(item => ({

@@ -20,16 +20,16 @@ model MonthlySummary {
   debit   Float @default(0)
   havings Float @default(0)
 
-  details Detail[] // Relación con los movimientos
+  details MovementDetail[] // Relación con los movimientos
 }
 
-model Detail {
+model MovementDetail {
   id          Int      @id @default(autoincrement())
   amount      Float
   description String
   date        DateTime
   name        String
-
+  type        String
   monthlySummaryId Int
   monthlySummary   MonthlySummary @relation(fields: [monthlySummaryId], references: [id])
 }

@@ -4,9 +4,8 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: Request) {
     try {
         const body = await request.json()
-        const { createdDate, clientName,pdfUrl } = body
-        console.log("createdDate",createdDate,"clientName",clientName,"pdfUrl",pdfUrl);
-        
+        const { createdDate, clientName, pdfUrl } = body
+
         if (!createdDate || !clientName || !pdfUrl) {
             return NextResponse.json(
                 { error: 'Faltan campos obligatorios: date y clientName' },
