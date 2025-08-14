@@ -1,6 +1,8 @@
 import { User, FileText, Package, Wrench, Download, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { formDataSchema, FormData } from "@/schemas/formDataSchema";
 
-interface FormData {
+interface FormDataProps {
   budgetId: number | null;
   client: string;
   text: string;
@@ -10,37 +12,45 @@ interface FormData {
 }
 
 interface Props {
-  formData: FormData;
+  formData: FormDataProps;
   setFormData: (data: FormData) => void;
   onDownload: () => void;
   isGenerating: boolean;
 }
 
 export default function PdfForm({ formData, setFormData, onDownload, isGenerating }: Props) {
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const result = formDataSchema.safeParse(formData);
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach(issue => {
+        const field = issue.path[0] as string;
+        newErrors[field] = issue.message;
+      });
+      setErrors(newErrors);
+    } else {
+      setErrors({});
+    }
+  }, [formData]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: name === 'materialPrice' || name === 'inputs' || name === 'labor' 
-        ? parseFloat(value) || 0 
+      [name]: name === "materialPrice" || name === "inputs" || name === "labor"
+        ? parseFloat(value) || 0
         : value
     });
   };
 
   const inputFields = [
     {
-      name: 'client',
-      label: 'Cliente',
-      type: 'text',
-      placeholder: 'Nombre completo del cliente',
-      icon: User,
-      value: formData.client
-    },
-    {
       name: 'materialPrice',
       label: 'Materiales',
       type: 'number',
-      placeholder: '0.00',
       icon: Package,
       value: formData.materialPrice,
       prefix: '$'
@@ -49,7 +59,6 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
       name: 'inputs',
       label: 'Insumos',
       type: 'number',
-      placeholder: '0.00',
       icon: Package,
       value: formData.inputs,
       prefix: '$'
@@ -58,7 +67,6 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
       name: 'labor',
       label: 'Mano de obra',
       type: 'number',
-      placeholder: '0.00',
       icon: Wrench,
       value: formData.labor,
       prefix: '$'
@@ -66,7 +74,7 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
   ];
 
   return (
-    <div className="w-full max-w-md bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] border border-[var(--border)] animate-scale-in">
+    <div className="w-full bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] border border-[var(--border)] animate-scale-in">
       <div className="p-6 border-b border-[var(--border)]">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-[var(--primary)]/10 rounded-lg">
@@ -74,19 +82,15 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
           </div>
           <h2 className="text-xl font-bold text-[var(--foreground)]">Datos del Presupuesto</h2>
         </div>
-        <p className="text-sm text-[var(--foreground-muted)] mt-2">
-          Complete la información para generar el PDF
-        </p>
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Cliente */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="client">
             Cliente
           </label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[var(--foreground-muted)]" />
+            <User className="absolute left-3 top-1/3 transform -translate-y-1/2 h-5 w-5 text-[var(--foreground-muted)]" />
             <input
               type="text"
               name="client"
@@ -106,10 +110,9 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
                 transition-all duration-200
               "
             />
+                 {errors.client && <p className="absolute text-red-500 text-sm mt-1">{errors.client}</p>}
           </div>
         </div>
-
-        {/* Descripción */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="text">
             Descripción del trabajo
@@ -136,10 +139,10 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
                 resize-none
               "
             />
+            {errors.text && <p className="absolute text-red-500 text-sm mt-1">{errors.text}</p>}
           </div>
         </div>
 
-        {/* Campos de precio */}
         {inputFields.map((field) => {
           const IconComponent = field.icon;
           return (
@@ -160,7 +163,6 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
                   id={field.name}
                   value={field.value}
                   onChange={handleChange}
-                  placeholder={field.placeholder}
                   step="0.01"
                   min="0"
                   className={`
@@ -175,12 +177,14 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
                     transition-all duration-200
                   `}
                 />
+                   {errors[field.name] && (
+                  <p className="absolute text-red-500 text-sm mt-1">{errors[field.name]}</p>
+                )}
               </div>
             </div>
           );
         })}
 
-        {/* Total */}
         <div className="pt-4 border-t border-[var(--border)]">
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-[var(--foreground)]">Total:</span>
@@ -189,11 +193,9 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
             </span>
           </div>
         </div>
-
-        {/* Botón de descarga */}
         <button
           onClick={onDownload}
-          disabled={isGenerating || !formData.client.trim()}
+          disabled={isGenerating || !formData.client.trim() ||  Object.keys(errors).length > 0}
           className="
             w-full flex items-center justify-center space-x-2 py-3 px-4
             bg-[var(--primary)] hover:bg-[var(--primary-hover)]

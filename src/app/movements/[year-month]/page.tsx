@@ -7,73 +7,59 @@ import { FileSearch, Calendar, DollarSign, FileText } from 'lucide-react'
 
 const columns = [
   {
-      accessorKey: 'name',
-      header: 'Concepto'
+    accessorKey: 'name',
+    header: 'Concepto'
   },
   {
-      accessorKey: 'description',
-      header: 'Descripción'
+    accessorKey: 'description',
+    header: 'Descripción'
   },
   {
-      accessorKey: 'amount',
-      header: 'Monto'
+    accessorKey: 'amount',
+    header: 'Monto'
   },
   {
-      accessorKey: 'date',
-      header: 'Fecha'
+    accessorKey: 'date',
+    header: 'Fecha'
   }
 ]
+
+const getMonthName = (monthNumber: string) => {
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ]
+  return months[parseInt(monthNumber) - 1] || monthNumber
+}
 
 const MovementsDetails = () => {
   const params = useParams()
   const yearMonth = params['year-month']
-  
+
   const [details, setDetails] = useState([])
-  const [loading, setLoading] = useState(true)
+
   const [periodInfo, setPeriodInfo] = useState({ year: '', month: '' })
 
   useEffect(() => {
-    if (!yearMonth) return
+    (async () => {
+      try {
+        if (!yearMonth) return
 
-    const [year, month] = String(yearMonth).split('-')
-    setPeriodInfo({ year, month })
-
-    fetch(`/api/details?year=${year}&month=${month}`)
-      .then(res => res.json())
-      .then(data => {
+        const [year, month] = String(yearMonth).split('-')
+        setPeriodInfo({ year, month })
+        const res = await fetch(`/api/details?year=${year}&month=${month}`)
+        const data = await res.json()
         setDetails(data)
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error loading details:', error)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+      }
+    })()
   }, [yearMonth])
 
-  const getMonthName = (monthNumber: string) => {
-    const months = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ]
-    return months[parseInt(monthNumber) - 1] || monthNumber
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)] flex items-center justify-center">
-        <div className="text-center space-y-4 animate-fade-in">
-          <div className="w-12 h-12 border-4 border-[var(--primary)]/20 border-t-[var(--primary)] rounded-full animate-spin mx-auto" />
-          <p className="text-[var(--foreground-secondary)]">Cargando detalles del período...</p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)]">
       <div className="container mx-auto px-6 py-8">
-        {/* Header */}
         <header className="text-center mb-12 animate-fade-in">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="p-3 bg-[var(--primary)]/10 rounded-2xl">
@@ -83,15 +69,7 @@ const MovementsDetails = () => {
               Detalle de Movimientos
             </h1>
           </div>
-          <div className="flex items-center justify-center space-x-2 text-lg text-[var(--foreground-secondary)]">
-            <Calendar className="h-5 w-5" />
-            <span>
-              {getMonthName(periodInfo.month)} {periodInfo.year}
-            </span>
-          </div>
         </header>
-
-        {/* Period Info Card */}
         <div className="max-w-4xl mx-auto mb-8 animate-scale-in">
           <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 shadow-[var(--shadow-md)]">
             <div className="flex items-center justify-between">
@@ -117,8 +95,6 @@ const MovementsDetails = () => {
             </div>
           </div>
         </div>
-
-        {/* Content */}
         {details.length > 0 ? (
           <div className="animate-fade-in">
             <Table columns={columns} data={details} />
@@ -146,8 +122,7 @@ const MovementsDetails = () => {
                     text-[var(--primary-foreground)] font-semibold
                     rounded-xl
                     transition-all duration-200
-                    transform hover:scale-105
-                  "
+                    transform hover:scale-105"
                 >
                   <DollarSign className="h-5 w-5" />
                   <span>Registrar movimiento</span>

@@ -107,20 +107,20 @@ const Table = ({ columns, data, total }: TableProps) => {
                     <table className='w-full'>
                         <thead className='bg-[var(--background-tertiary)]'>
                             {table.getHeaderGroups().map(headerGroup => (
-                                <tr key={headerGroup.id}>
+                                <tr  key={headerGroup.id}>
                                     {headerGroup.headers.map(header => (
                                         <th 
                                             key={header.id}
                                             className="
-                                                px-6 py-4 text-left font-semibold text-[var(--foreground)]
+                                                px-6 py-4  font-semibold text-[var(--foreground)]
                                                 cursor-pointer hover:bg-[var(--border)] transition-colors duration-200
                                                 select-none
                                             "
                                             onClick={header.column.getToggleSortingHandler()}
                                         >
                                             {header.isPlaceholder ? null : (
-                                                <div className="flex items-center space-x-2">
-                                                    <span>
+                                                <div className="flex items-center justify-center space-x-2">
+                                                    <span >
                                                         {flexRender(
                                                             header.column.columnDef.header,
                                                             header.getContext()
@@ -146,6 +146,7 @@ const Table = ({ columns, data, total }: TableProps) => {
                                 <tr 
                                     key={row.id}
                                     className={`
+                                        text-center
                                         border-b border-[var(--border)]
                                         hover:bg-[var(--background-tertiary)]
                                         transition-colors duration-200
@@ -179,7 +180,7 @@ const Table = ({ columns, data, total }: TableProps) => {
                 </div>
 
                 {/* Pagination */}
-                <div className='flex items-center justify-between p-4 bg-[var(--background-tertiary)] border-t border-[var(--border)]'>
+                <div className='flex items-center justify-between  flex-wrap p-4 bg-[var(--background-tertiary)] border-t border-[var(--border)]'>
                     <div className='flex items-center space-x-2'>
                         <button 
                             className='p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--background-secondary)] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed' 

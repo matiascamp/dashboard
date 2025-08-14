@@ -32,7 +32,6 @@ type Summary = {
 const AccountingEntry = () => {
   const [summaries, setSummaries] = useState<Summary[]>([])
   const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     totalDebit: 0,
     totalHavings: 0,
@@ -46,26 +45,23 @@ const AccountingEntry = () => {
         const data = await response.json()
         setSummaries(data)
       } catch (error) {
-        console.error('Error loading summaries:', error)
-      } finally {
-        setLoading(false)
+        console.error('Error cargando movimientos:', error)
       }
     })()
   }, [])
 
   useEffect(() => {
     if (!summaries.length) return
-    
+
     const totalAmount = summaries.reduce(
       (acc, curr) => acc - curr.debit + curr.havings,
       0
     )
     setTotal(totalAmount)
 
-    // Calculate stats
     const totalDebit = summaries.reduce((acc, curr) => acc + curr.debit, 0)
     const totalHavings = summaries.reduce((acc, curr) => acc + curr.havings, 0)
-    
+
     setStats({
       totalDebit,
       totalHavings,
@@ -73,21 +69,10 @@ const AccountingEntry = () => {
     })
   }, [summaries])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)] flex items-center justify-center">
-        <div className="text-center space-y-4 animate-fade-in">
-          <div className="w-12 h-12 border-4 border-[var(--primary)]/20 border-t-[var(--primary)] rounded-full animate-spin mx-auto" />
-          <p className="text-[var(--foreground-secondary)]">Cargando asientos contables...</p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)]">
       <div className="container mx-auto px-6 py-8">
-        {/* Header */}
         <header className="text-center mb-12 animate-fade-in">
           <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="p-3 bg-[var(--primary)]/10 rounded-2xl">
@@ -97,14 +82,8 @@ const AccountingEntry = () => {
               Asientos Contables
             </h1>
           </div>
-          <p className="text-lg text-[var(--foreground-secondary)] max-w-2xl mx-auto">
-            Resumen mensual de movimientos contables con balance general
-          </p>
         </header>
-
-        {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8 animate-scale-in">
-          {/* Total Periods */}
           <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 shadow-[var(--shadow-md)]">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-blue-500/10 rounded-xl">
@@ -116,8 +95,6 @@ const AccountingEntry = () => {
               </div>
             </div>
           </div>
-
-          {/* Total Debit */}
           <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 shadow-[var(--shadow-md)]">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-red-500/10 rounded-xl">
@@ -129,8 +106,6 @@ const AccountingEntry = () => {
               </div>
             </div>
           </div>
-
-          {/* Total Havings */}
           <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 shadow-[var(--shadow-md)]">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-green-500/10 rounded-xl">
@@ -142,37 +117,35 @@ const AccountingEntry = () => {
               </div>
             </div>
           </div>
-
-          {/* Balance */}
-          <div className={`bg-[var(--card-bg)] border-2 rounded-2xl p-6 shadow-[var(--shadow-md)] ${
-            total >= 0 
-              ? 'border-green-500/30 bg-green-500/5' 
-              : 'border-red-500/30 bg-red-500/5'
-          }`}>
+          <div className={`bg-[var(--card-bg)] border-2 rounded-2xl p-6 shadow-[var(--shadow-md)] ${total >= 0
+            ? 'border-green-500/30 bg-green-500/5'
+            : 'border-red-500/30 bg-red-500/5'
+            }`}>
             <div className="flex items-center space-x-3">
-              <div className={`p-3 rounded-xl ${
-                total >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
-              }`}>
-                <DollarSign className={`h-6 w-6 ${
-                  total >= 0 ? 'text-green-500' : 'text-red-500'
-                }`} />
+              <div className={`p-3 rounded-xl ${total >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
+                }`}>
+                <DollarSign className={`h-6 w-6 ${total >= 0 ? 'text-green-500' : 'text-red-500'
+                  }`} />
               </div>
               <div>
                 <p className="text-sm text-[var(--foreground-muted)]">Balance Final</p>
-                <p className={`text-2xl font-bold ${
-                  total >= 0 ? 'text-green-500' : 'text-red-500'
-                }`}>
+                <p className={`text-2xl font-bold ${total >= 0 ? 'text-green-500' : 'text-red-500'
+                  }`}>
                   ${total.toLocaleString()}
                 </p>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Table */}
-        <div className="animate-fade-in">
-          <Table columns={columns} data={summaries} total={total} />
-        </div>
+        {
+          columns.length ?
+            <div className="animate-fade-in">
+              <Table columns={columns} data={summaries} total={total} />
+            </div> :
+            <div>
+              <h1>Todavia no existen movimientos registrados</h1>
+            </div>
+        }
       </div>
     </div>
   )

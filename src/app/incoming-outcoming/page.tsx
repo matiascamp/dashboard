@@ -1,20 +1,68 @@
-import { DollarSign, FileText, TrendingUp, TrendingDown, Save } from "lucide-react";
+'use client'
+import { movementSchema } from "@/schemas/movementSchem";
+import { DollarSign, FileText, Save } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const FormMovements = () => {
+
+    const [formData, setFormData] = useState({
+        name: '',
+        amount: '',
+        description: '',
+        type: 'incoming'
+    })
+
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        const result = movementSchema.safeParse(formData);
+        if (!result.success) {
+            const newErrors: Record<string, string> = {};
+            result.error.issues.forEach(issue => {
+                const field = issue.path[0] as string;
+                newErrors[field] = issue.message;
+            });
+            setErrors(newErrors);
+        } else {
+            setErrors({});
+        }
+    }, [formData]);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        const result = movementSchema.safeParse(formData);
+        if (!result.success) return
+        try {
+            const res = await fetch('/api/movements', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...formData,
+                    date: new Date()
+                })
+            })
+
+            if (!res.ok) throw new Error('Error al crear movimiento')
+            alert('Registrado correctamente')
+            setFormData({
+                name: '',
+                amount: '0',
+                description: '',
+                type: 'incoming'
+            })
+        } catch (error) {
+            console.error('Error al intentar registrar movimiento', error);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)] flex flex-col items-center justify-center p-6">
-            {/* Header */}
             <div className="text-center mb-12 animate-fade-in">
                 <h1 className="text-4xl font-bold text-[var(--foreground)] mb-4">
-                    Registrar 
+                    Registrar
                     <span className="text-gradient"> Movimiento</span>
                 </h1>
-                <p className="text-lg text-[var(--foreground-secondary)] max-w-2xl mx-auto">
-                    Agregue ingresos y egresos para mantener su contabilidad actualizada
-                </p>
             </div>
-
-            {/* Form Card */}
             <div className="w-full max-w-md bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] border border-[var(--border)] animate-scale-in">
                 <div className="p-6 border-b border-[var(--border)]">
                     <div className="flex items-center space-x-3">
@@ -23,14 +71,39 @@ const FormMovements = () => {
                         </div>
                         <h2 className="text-xl font-bold text-[var(--foreground)]">Nuevo Movimiento</h2>
                     </div>
-                    <p className="text-sm text-[var(--foreground-muted)] mt-2">
-                        Complete los datos del movimiento financiero
-                    </p>
                 </div>
-
                 <div className="p-6">
-                    <form className="space-y-6">
-                        {/* Monto */}
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="name">
+                                Nombre de operacion
+                            </label>
+                            <div className="relative">
+                                <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[var(--foreground-muted)]" />
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    placeholder="Ingrese nombre de operacion..."
+                                    value={formData.name}
+                                    onChange={e => setFormData(prev => ({
+                                        ...prev,
+                                        name: e.target.value
+                                    }))}
+                                    className="
+                                        w-full pl-10 pr-4 py-3 
+                                        bg-[var(--input-bg)] 
+                                        border border-[var(--border)]
+                                        rounded-xl
+                                        text-[var(--foreground)]
+                                        placeholder:text-[var(--foreground-muted)]
+                                        focus:border-[var(--primary)]
+                                        focus:ring-0
+                                        transition-all duration-200"
+                                />
+                                {errors.name && <p className="absolute text-red-500 text-sm mt-1">{errors.name}</p>}
+                            </div>
+                        </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="amount">
                                 Monto
@@ -44,6 +117,11 @@ const FormMovements = () => {
                                     placeholder="0.00"
                                     step="0.01"
                                     min="0"
+                                    value={formData.amount}
+                                    onChange={e => setFormData(prev => ({
+                                        ...prev,
+                                        amount: e.target.value
+                                    }))}
                                     className="
                                         w-full pl-10 pr-4 py-3 
                                         bg-[var(--input-bg)] 
@@ -53,13 +131,11 @@ const FormMovements = () => {
                                         placeholder:text-[var(--foreground-muted)]
                                         focus:border-[var(--primary)]
                                         focus:ring-0
-                                        transition-all duration-200
-                                    "
+                                        transition-all duration-200"
                                 />
+                                {errors.amount && <p className="absolute text-red-500 text-sm mt-1">{errors.amount}</p>}
                             </div>
                         </div>
-
-                        {/* Descripción */}
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="description">
                                 Descripción
@@ -71,6 +147,11 @@ const FormMovements = () => {
                                     name="description"
                                     rows={3}
                                     placeholder="Detalles del movimiento..."
+                                    value={formData.description}
+                                    onChange={e => setFormData(prev => ({
+                                        ...prev,
+                                        description: e.target.value
+                                    }))}
                                     className="
                                         w-full pl-10 pr-4 py-3 
                                         bg-[var(--input-bg)] 
@@ -81,13 +162,11 @@ const FormMovements = () => {
                                         focus:border-[var(--primary)]
                                         focus:ring-0
                                         transition-all duration-200
-                                        resize-none
-                                    "
+                                        resize-none"
                                 />
+                                {errors.description && <p className="absolute text-red-500 text-sm mt-1">{errors.description}</p>}
                             </div>
                         </div>
-
-                        {/* Tipo de movimiento */}
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="type-movement">
                                 Tipo de movimiento
@@ -96,6 +175,8 @@ const FormMovements = () => {
                                 <select
                                     id="type-movement"
                                     name="type-movement"
+                                    value={formData.type}
+                                    onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as "incoming" | "outcoming" }))}
                                     className="
                                         w-full pl-4 pr-10 py-3 
                                         bg-[var(--input-bg)] 
@@ -105,8 +186,7 @@ const FormMovements = () => {
                                         focus:border-[var(--primary)]
                                         focus:ring-0
                                         transition-all duration-200
-                                        appearance-none cursor-pointer
-                                    "
+                                        appearance-none cursor-pointer"
                                 >
                                     <option value="incoming">💰 Ingreso</option>
                                     <option value="outcoming">💸 Egreso</option>
@@ -118,37 +198,21 @@ const FormMovements = () => {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Botón de envío */}
                         <button
                             type="submit"
+                            disabled={Object.keys(errors).length > 0}
                             className="
                                 w-full flex items-center justify-center space-x-2 py-3 px-4
                                 bg-[var(--primary)] hover:bg-[var(--primary-hover)]
                                 text-[var(--primary-foreground)] font-semibold
                                 rounded-xl
                                 transition-all duration-200
-                                transform hover:scale-[1.02] active:scale-[0.98]
-                            "
+                                transform hover:scale-[1.02] active:scale-[0.98]"
                         >
                             <Save className="h-5 w-5" />
                             <span>Registrar Movimiento</span>
                         </button>
                     </form>
-                </div>
-            </div>
-
-            {/* Info Cards */}
-            <div className="grid grid-cols-2 gap-4 mt-12 w-full max-w-md animate-fade-in">
-                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 text-center">
-                    <TrendingUp className="h-6 w-6 text-green-500 mx-auto mb-2" />
-                    <div className="text-sm text-[var(--foreground-secondary)]">Ingresos</div>
-                    <div className="text-xs text-[var(--foreground-muted)]">Entradas de dinero</div>
-                </div>
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
-                    <TrendingDown className="h-6 w-6 text-red-500 mx-auto mb-2" />
-                    <div className="text-sm text-[var(--foreground-secondary)]">Egresos</div>
-                    <div className="text-xs text-[var(--foreground-muted)]">Salidas de dinero</div>
                 </div>
             </div>
         </div>

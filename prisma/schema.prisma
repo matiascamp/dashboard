@@ -40,3 +40,10 @@ model Budgets {
   clientName  String
   pdfUrl      String
 }
+
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  passwordHash String
+  role         String 
+}

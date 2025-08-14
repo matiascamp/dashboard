@@ -26,7 +26,6 @@ interface Budgets {
 
 const BudgetList = () => {
     const [budgets, setBudgets] = useState<Budgets[]>([])
-    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         (async () => {
@@ -38,27 +37,14 @@ const BudgetList = () => {
                 }
             } catch (error) {
                 console.error('Error loading budgets:', error)
-            } finally {
-                setLoading(false)
             }
         })()
     }, [])
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)] flex items-center justify-center">
-                <div className="text-center space-y-4 animate-fade-in">
-                    <div className="w-12 h-12 border-4 border-[var(--primary)]/20 border-t-[var(--primary)] rounded-full animate-spin mx-auto" />
-                    <p className="text-[var(--foreground-secondary)]">Cargando presupuestos...</p>
-                </div>
-            </div>
-        )
-    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)]">
             <div className="container mx-auto px-6 py-8">
-                {/* Header */}
                 <header className="text-center mb-12 animate-fade-in">
                     <div className="flex items-center justify-center space-x-3 mb-4">
                         <div className="p-3 bg-[var(--primary)]/10 rounded-2xl">
@@ -72,8 +58,6 @@ const BudgetList = () => {
                         Historial completo de todos los presupuestos generados
                     </p>
                 </header>
-
-                {/* Content */}
                 {budgets.length > 0 ? (
                     <div className="animate-scale-in">
                         <Table columns={columns} data={budgets} />
@@ -101,8 +85,7 @@ const BudgetList = () => {
                                         text-[var(--primary-foreground)] font-semibold
                                         rounded-xl
                                         transition-all duration-200
-                                        transform hover:scale-105
-                                    "
+                                        transform hover:scale-105"
                                 >
                                     <FileText className="h-5 w-5" />
                                     <span>Crear primer presupuesto</span>

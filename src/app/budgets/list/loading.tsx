@@ -3,7 +3,7 @@ import { loadingSkeleton } from "@/components/loadingSkeleton"
 const Loading = () => {
     return (
         <>
-            {loadingSkeleton("Cargando asientos contables")}
+            {loadingSkeleton("Cargando presupuestos...")}
         </>
     )
 }

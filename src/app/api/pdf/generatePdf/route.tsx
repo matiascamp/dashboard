@@ -4,8 +4,7 @@ import PdfDocument, { PDFFormData } from '@/components/pdf/pdf';
 import { Readable } from 'stream';
 import path from 'path'
 import fs from 'fs'
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const toBase64 = (filePath: string, mime: string) => {
   const absPath = path.resolve(process.cwd(), filePath);
@@ -22,17 +21,18 @@ const s3 = new S3Client({
   }
 })
 
-
-const toBufferFromStream = async (stream: any): Promise<Buffer> => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toBufferFromStream = async (stream:any): Promise<Buffer> => {
+  
   if (stream instanceof Readable) {
-    // Stream de Node.js
+
     const chunks: Uint8Array[] = [];
     for await (const chunk of stream) {
       chunks.push(chunk);
     }
     return Buffer.concat(chunks);
   } else if ('getReader' in stream && typeof stream.getReader === 'function') {
-    // Stream web
+
     const reader = stream.getReader();
     const chunks: Uint8Array[] = [];
     while (true) {
@@ -73,7 +73,6 @@ export const POST = async (request: NextRequest) => {
 
     const workerUrl = `${process.env.WORKER_BASE_URL}/${fileName}`;
 
-    // Responder con la URL para que el frontend pueda acceder al PDF
     return NextResponse.json({
       url: workerUrl,
     });

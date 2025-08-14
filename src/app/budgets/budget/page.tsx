@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import PdfForm from '@/components/pdf/form';
 import PdfPreview from '@/components/pdf/pdfpreview';
+// import Viewer from '@/components/pdf/viewer';
 
 interface FormData {
   budgetId: number | null;
@@ -40,7 +41,7 @@ export default function BudgetPage() {
         }))
 
       } catch (error) {
-        console.log("error", error)
+        console.error("error al obtener listado de pdf", error)
       }
     })()
   }, [])
@@ -77,23 +78,18 @@ export default function BudgetPage() {
     }
   };
 
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)]">
       <div className="container mx-auto px-6 py-8">
-        {/* Header */}
         <header className="text-center mb-12 animate-fade-in">
           <h1 className="text-4xl font-bold text-[var(--foreground)] mb-4">
             Crear Presupuesto
           </h1>
-          <p className="text-lg text-[var(--foreground-secondary)] max-w-2xl mx-auto">
-            Complete los datos del presupuesto y visualice el resultado antes de generar el PDF final
-          </p>
         </header>
-
-        {/* Content */}
         <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
-          {/* Form */}
-          <div className="flex-1">
+          <div className="w-full flex-1">
             <PdfForm
               formData={formData}
               setFormData={setFormData}
@@ -101,14 +97,13 @@ export default function BudgetPage() {
               isGenerating={isGenerating}
             />
           </div>
-
-          {/* Preview */}
           <div className="flex-1">
             <PdfPreview 
               formData={formData} 
               setFormData={setFormData} 
             />
           </div>
+          {/* <Viewer formData={formData} /> */}
         </div>
       </div>
     </div>

@@ -1,8 +1,14 @@
+'use client'
 import Image from "next/image";
 import Link from "next/link";
 import { Calculator, FileText, TrendingUp, LogOut } from "lucide-react";
+import { useAuth } from "@/context/authProvider";
+import { useRouter } from "next/navigation";
 
 const SideBar = () => {
+    const { user, logout } = useAuth()
+    const router = useRouter()
+
     const menuItems = [
         {
             href: "/movements",
@@ -24,18 +30,22 @@ const SideBar = () => {
         }
     ];
 
+    const handleLogout = async () => {
+        await logout();
+        router.push('/login');
+    };
+
     return (
         <aside className="h-screen w-80 bg-[var(--sidebar-bg)] text-[var(--sidebar-foreground)] flex flex-col animate-slide-in">
-            {/* Header */}
             <header className="p-8 border-b border-white/10">
                 <div className="flex flex-col items-center text-center space-y-4">
                     <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-20"></div>
                         <div className="relative bg-white rounded-2xl p-2">
-                            <Image 
-                                src="/logo.jpg" 
-                                alt="Herrería del Plata" 
-                                width={80} 
+                            <Image
+                                src="/logo.jpg"
+                                alt="Herrería del Plata"
+                                width={80}
                                 height={80}
                                 className="rounded-xl"
                             />
@@ -51,19 +61,32 @@ const SideBar = () => {
                     </div>
                 </div>
             </header>
-
-            {/* User Info */}
-            <div className="px-8 py-6 border-b border-white/10">
-                <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                        U
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-white">Usuario</p>
-                        <p className="text-xs text-gray-400">Administrador</p>
+            {user ?
+                <div className="px-8 py-6 border-b border-white/10">
+                    <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                            U
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-white text-ellipsis max-w-50 overflow-clip">{user.email}</p>
+                            <p className="text-xs text-gray-400 capitalize">{user.role}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+                :
+                <div className="px-8 py-6 border-b border-white/10">
+                    <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                            U
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-white">Usuario</p>
+                            <p className="text-xs text-gray-400">Administrador</p>
+                        </div>
+                    </div>
+                </div>
+
+            }
 
             {/* Navigation */}
             <nav className="flex-1 px-6 py-6 space-y-2">
@@ -84,9 +107,9 @@ const SideBar = () => {
                                 hover:translate-x-1
                             "
                         >
-                            <IconComponent 
-                                size={20} 
-                                className="mt-0.5 text-gray-400 group-hover:text-blue-400 transition-colors duration-200" 
+                            <IconComponent
+                                size={20}
+                                className="mt-0.5 text-gray-400 group-hover:text-blue-400 transition-colors duration-200"
                             />
                             <div>
                                 <div className="font-medium group-hover:text-white transition-colors">
@@ -100,22 +123,25 @@ const SideBar = () => {
                     );
                 })}
             </nav>
-
-            {/* Footer */}
             <footer className="p-6 border-t border-white/10">
-                <button className="
-                    flex items-center space-x-3 w-full px-4 py-3 rounded-xl
-                    text-gray-300 hover:text-white
-                    hover:bg-red-500/20
-                    transition-all duration-200
-                    group
-                ">
-                    <LogOut 
-                        size={18} 
-                        className="text-gray-400 group-hover:text-red-400 transition-colors duration-200" 
+
+                <button
+                    onClick={handleLogout}
+                    className="
+                     flex items-center space-x-3 w-full px-4 py-3 rounded-xl
+                     text-gray-300 hover:text-white
+                     hover:bg-red-500/20
+                     transition-all duration-200
+                     group
+                 "
+                >
+                    <LogOut
+                        size={18}
+                        className="text-gray-400 group-hover:text-red-400 transition-colors duration-200"
                     />
                     <span className="font-medium">Cerrar sesión</span>
                 </button>
+
             </footer>
         </aside>
     );

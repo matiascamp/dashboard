@@ -1,19 +1,20 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
-//refactor try/catch
 export const GET = async () => {
+  try {
+    
     const resumen = await prisma.$queryRaw<{
         year: bigint
         month: bigint
         debit: number
         havings: number
-      }>`
+      }[]>`
       SELECT
         YEAR(date) AS year,
         MONTH(date) AS month,
-        SUM(CASE WHEN type = 'egreso' THEN amount ELSE 0 END) AS debit,
-        SUM(CASE WHEN type = 'ingreso' THEN amount ELSE 0 END) AS havings
+        SUM(CASE WHEN type = 'outcoming' THEN amount ELSE 0 END) AS debit,
+        SUM(CASE WHEN type = 'incoming' THEN amount ELSE 0 END) AS havings
       FROM MovementDetail
       GROUP BY year, month
       ORDER BY year DESC, month DESC
@@ -27,4 +28,8 @@ export const GET = async () => {
       }))
       
   return NextResponse.json(resumenConvertido)
+  } catch (error) {
+    console.error('Error al intentar obtener asiento contable:', error)
+    return NextResponse.json({ error: ' al intentar obtener asiento contable:' }, { status: 500 })
+  }
 }

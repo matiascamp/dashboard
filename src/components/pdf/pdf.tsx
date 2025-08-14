@@ -1,12 +1,8 @@
 /* eslint-disable jsx-a11y/alt-text */
-// components/PdfDocument.tsx
-import { Document, Page, Text, StyleSheet, View, Image  } from '@react-pdf/renderer';
-import { sharedTheme } from './sharedStyles';
-
-
+import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer';
 
 export interface PDFFormData {
-  budgetId:number;
+  budgetId: number | null;
   client: string;
   text: string;
   materialPrice: number;
@@ -26,151 +22,110 @@ interface PdfDocumentProps {
 }
 
 const styles = StyleSheet.create({
-  page: {
-    backgroundColor: sharedTheme.colors.gray100,
-    padding: sharedTheme.spacing.p6,
-  },
   container: {
-    backgroundColor: sharedTheme.colors.white,
-    paddingHorizontal: sharedTheme.spacing.p8,
-    paddingVertical: sharedTheme.spacing.p6,
-    height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between',
+    gap: 26,
+    height: '100%',
+    justifyContent: 'space-between'
+  },
+  innerCard: {
+    padding: 32,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
+    marginBottom: 15
   },
-  headerTextContainer: {
-    flexDirection: 'column',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
-  title: {
-    fontSize: sharedTheme.fontSizes['3xl'],
-    fontWeight: sharedTheme.fontWeights.bold,
-    textAlign: 'center',
-  },
-  smallBold: {
-    fontSize: sharedTheme.fontSizes.sm,
-    fontWeight: sharedTheme.fontWeights.semibold,
-  },
-  small: {
-    fontSize: sharedTheme.fontSizes.sm,
-    fontWeight: sharedTheme.fontWeights.normal,
-  },
-  underline: {
-    textDecoration: 'underline',
-  },
-  textBlock: {
-    marginBottom: 15,
-    wordBreak: 'break-word',
-    flexWrap:'wrap'
-  },
-  footer: {
-    flexDirection: 'column',
-    paddingBottom: sharedTheme.spacing.p6
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems:'center',
-    gap:"2",
-    paddingBottom: 4,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  totalLabel: {
-    fontWeight: sharedTheme.fontWeights.bold,
-    fontSize: sharedTheme.fontSizes.base,
-    textDecoration: 'underline',
-    marginRight: 4,
-  },
-  socialContainer: {
-    fontWeight: sharedTheme.fontWeights.bold,
-    fontSize: sharedTheme.fontSizes.sm,
-    color: sharedTheme.colors.gray400,
-    flexDirection: 'column',
-    gap: 4,
-    marginTop: 20,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
+  titleSection: { flexDirection: 'column', gap: 4 },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'left' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  section: { marginVertical:15, gap: 8 },
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingBottom: 4 },
+  textBlock: { backgroundColor: '#f3f4f6', padding: 8, borderRadius: 8, minHeight: 150 },
+  costRow: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f3f4f6', paddingVertical: 4 },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#111827', padding: 12, borderRadius: 8 },
+  totalLabel: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  totalValue: { color: '#fff', fontWeight: 'bold', fontSize: 20 },
+  footer: { marginTop: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb', paddingTop: 12, gap: 4 },
+  socialRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 });
 
 const PdfDocument = ({ formData, images }: PdfDocumentProps) => (
-
   <Document pageLayout='singlePage'>
     <Page size="A4">
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Image src={images.logo} style={{ width: 150, height: 150 }} />
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>Presupuesto</Text>
-            <Text style={styles.smallBold}>Nº:{formData.budgetId}</Text>
-            <Text style={styles.smallBold}>
-              Fecha: {new Date().toLocaleDateString('es-ES')}
-            </Text>
-            <Text style={styles.smallBold}>
-              Cliente: {formData.client}
-            </Text>
-          </View>
-        </View>
-
-        {/* Texto principal */}
-        <View style={styles.textBlock}>
-          <Text style={styles.smallBold}>{formData.text}</Text>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <View style={styles.footerRow}>
-            <Text style={[styles.smallBold, styles.underline]}>Precio de materiales:</Text>
-            <Text style={[styles.smallBold]}>${formData.materialPrice}</Text>
-          </View>
-          <View style={styles.footerRow}>
-            <Text style={[styles.smallBold, styles.underline]}>Insumos:</Text>
-            <Text style={[styles.smallBold]}>${formData.inputs}</Text>
-          </View>
-          <View style={styles.footerRow}>
-            <Text style={[styles.smallBold, styles.underline]}>Mano de obra:</Text>
-            <Text style={[styles.smallBold]}>${formData.labor}</Text>
-          </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>TOTAL:</Text>
-            <Text style={styles.smallBold}>${formData.total}</Text>
+        <View style={styles.innerCard}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Image src={images.logo} style={{ width: 100, height: 100 }} />
+            <View style={styles.titleSection}>
+              <Text style={styles.title}>PRESUPUESTO</Text>
+              <View style={styles.infoRow}>
+                <Text>Nº:</Text>
+                <Text>{formData.budgetId ?? '---'}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text>Fecha:</Text>
+                <Text>{new Date().toLocaleDateString('es-ES')}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text>Cliente:</Text>
+                <Text>{formData.client || 'Sin especificar'}</Text>
+              </View>
+            </View>
           </View>
 
-          {/* Redes sociales */}
-          <View style={styles.socialContainer}>
+          {/* Descripción */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Descripción del Trabajo</Text>
+            <View style={styles.textBlock}>
+              <Text>{formData.text || 'No hay descripción disponible...'}</Text>
+            </View>
+          </View>
+
+          {/* Desglose de Costos */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Desglose de Costos</Text>
+            <View style={styles.costRow}>
+              <Text>Precio de materiales:</Text>
+              <Text>${formData.materialPrice.toLocaleString()}</Text>
+            </View>
+            <View style={styles.costRow}>
+              <Text>Insumos:</Text>
+              <Text>${formData.inputs.toLocaleString()}</Text>
+            </View>
+            <View style={styles.costRow}>
+              <Text>Mano de obra:</Text>
+              <Text>${formData.labor.toLocaleString()}</Text>
+            </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>TOTAL:</Text>
+              <Text style={styles.totalValue}>${formData?.total?.toLocaleString()}</Text>
+            </View>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
             <View style={styles.socialRow}>
-              <Image src={images.igIcon} style={{ width: 15, height: 15 }} />
-              <Text>herreriadelplata</Text>
+              <Image src={images.igIcon} style={{ width: 16, height: 16 }} />
+              <Text>@herreriadelplata</Text>
             </View>
             <View style={styles.socialRow}>
-              <Image src={images.phoneIcon} style={{ width: 15, height: 15 }} />
-              <Text>Tel:</Text>
+              <Image src={images.phoneIcon} style={{ width: 16, height: 16 }} />
+              <Text>Contacto telefónico disponible</Text>
             </View>
             <View style={styles.socialRow}>
-              <Image src={images.facebookIcon} style={{ width: 15, height: 15 }} />
+              <Image src={images.facebookIcon} style={{ width: 16, height: 16 }} />
               <Text>Herreria_del_plata</Text>
             </View>
           </View>
+
         </View>
       </View>
     </Page>
   </Document>
-
 );
 
 export default PdfDocument;

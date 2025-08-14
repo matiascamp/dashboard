@@ -4,6 +4,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/navBar";
 
+import { AuthProvider } from "@/context/authProvider";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -24,10 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html 
-      className="h-full scroll-smooth" 
+    <html
+      className="h-full"
       lang="es"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <body
         className={`
@@ -41,9 +44,11 @@ export default function RootLayout({
           duration-300
         `}
       >
-        <NavBar>
-          {children}
-        </NavBar>
+        <AuthProvider>
+          <NavBar>
+            {children}
+          </NavBar>
+        </AuthProvider>
       </body>
     </html>
   );
