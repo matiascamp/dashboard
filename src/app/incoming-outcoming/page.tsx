@@ -7,7 +7,7 @@ const FormMovements = () => {
 
     const [formData, setFormData] = useState({
         name: '',
-        amount: '',
+        amount: 0,
         description: '',
         type: 'incoming'
     })
@@ -46,7 +46,7 @@ const FormMovements = () => {
             alert('Registrado correctamente')
             setFormData({
                 name: '',
-                amount: '0',
+                amount: 0,
                 description: '',
                 type: 'incoming'
             })
@@ -120,7 +120,7 @@ const FormMovements = () => {
                                     value={formData.amount}
                                     onChange={e => setFormData(prev => ({
                                         ...prev,
-                                        amount: e.target.value
+                                        amount: Number(e.target.value)
                                     }))}
                                     className="
                                         w-full pl-10 pr-4 py-3 
