@@ -8,10 +8,8 @@ export async function POST(req: Request) {
   try {
 
     const { email, password } = await req.json();
-    console.log({email,password});
     
     const user = await prisma.user.findUnique({ where: { email } });
-    console.log({user});
     
     if (!user) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 401 });
