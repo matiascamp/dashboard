@@ -2,15 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { pdf } from '@react-pdf/renderer';
 import PdfDocument, { PDFFormData } from '@/components/pdf/pdf';
 import { Readable } from 'stream';
-import path from 'path'
-import fs from 'fs'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-const toBase64 = (filePath: string, mime: string) => {
-  const absPath = path.resolve(process.cwd(), filePath);
-  const buffer = fs.readFileSync(absPath);
-  return `data:${mime};base64,${buffer.toString('base64')}`;
-}
+
 
 const s3 = new S3Client({
   region: 'auto',
@@ -52,10 +46,10 @@ export const POST = async (request: NextRequest) => {
     const formData: PDFFormData = await request.json();
 
     const images = {
-      logo: toBase64('src/assets/logo.jpg', 'image/jpeg'),
-      igIcon: toBase64('src/assets/instagram_icon.png', 'image/png'),
-      phoneIcon: toBase64('src/assets/phone_icon.png', 'image/png'),
-      facebookIcon: toBase64('src/assets/facebook_icon.png', 'image/png'),
+      logo: `${process.env.BASE_URL}/logo.jpg`,
+      igIcon: `${process.env.BASE_URL}/instagram_icon.png`,
+      phoneIcon: `${process.env.BASE_URL}/phone_icon.png`,
+      facebookIcon: `${process.env.BASE_URL}/facebook_icon.png`,
     };
 
     const pdfStream = await pdf(<PdfDocument formData={formData} images={images} />).toBuffer();
