@@ -52,10 +52,10 @@ export const POST = async (request: NextRequest) => {
     const formData: PDFFormData = await request.json();
 
     const images = {
-      logo: toBase64('public/logo.jpg', 'image/jpeg'),
-      igIcon: toBase64('public/instagram_icon.png', 'image/png'),
-      phoneIcon: toBase64('public/phone_icon.png', 'image/png'),
-      facebookIcon: toBase64('public/facebook_icon.png', 'image/png'),
+      logo: toBase64('src/assets/logo.jpg', 'image/jpeg'),
+      igIcon: toBase64('src/assets/instagram_icon.png', 'image/png'),
+      phoneIcon: toBase64('src/assets/phone_icon.png', 'image/png'),
+      facebookIcon: toBase64('src/assets/facebook_icon.png', 'image/png'),
     };
 
     const pdfStream = await pdf(<PdfDocument formData={formData} images={images} />).toBuffer();
