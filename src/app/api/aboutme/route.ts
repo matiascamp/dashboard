@@ -32,6 +32,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(user);
   } catch (error) {
     console.error("Error en /api/me:", error);
+    if (error instanceof jwt.TokenExpiredError) {
+      // Limpiar cookie expirada
+      const response = NextResponse.json({ error: "Sesión expirada" }, { status: 401 });
+      response.cookies.set('token', '', {
+        httpOnly: true,
+        expires: new Date(0),
+        path: '/'
+      });
+      return response;
+    }
+    
+    if (error instanceof jwt.JsonWebTokenError) {
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
   }
 }

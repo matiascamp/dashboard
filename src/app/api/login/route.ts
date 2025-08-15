@@ -8,9 +8,11 @@ export async function POST(req: Request) {
   try {
 
     const { email, password } = await req.json();
-
+    console.log({email,password});
+    
     const user = await prisma.user.findUnique({ where: { email } });
-
+    console.log({user});
+    
     if (!user) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 401 });
     }
@@ -21,10 +23,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 });
     }
 
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: "1h" });
+    const accessToken = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: "15m" });
+    const refreshToken = jwt.sign({ id: user.id }, process.env.JWT_REFRESH_SECRET!, { expiresIn: "7d" });
 
-    const res = NextResponse.json({ token });
-    res.cookies.set("token", token, { httpOnly: true, path: "/" });
+    const res = NextResponse.json({ token: accessToken });
+    res.cookies.set("token", accessToken, { httpOnly: true, path: "/", maxAge: 15 * 60 });
+    res.cookies.set("refreshToken", refreshToken, { httpOnly: true, path: "/", maxAge: 7 * 24 * 60 * 60 });
 
     return res;
   } catch (error) {
