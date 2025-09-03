@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const publicPaths = ['/login']
   const path = request.nextUrl.pathname
 
-  const protectedApiPaths = ['/api']
 
-  if (path.startsWith('/api/')) {
+  if (
+    path.startsWith('/_next/static') ||
+    path.startsWith('/_next/image') ||
+    path.startsWith('/favicon.ico') ||
+    path.endsWith('.jpg') ||
+    path.endsWith('.jpeg') ||
+    path.endsWith('.png') ||
+    path.endsWith('.gif') ||
+    path.endsWith('.svg')
+  ) {
     return NextResponse.next()
   }
 
-  // Si la ruta es pública, dejamos pasar
-  if (publicPaths.some(apiPath => path.startsWith(apiPath))) {
+  const publicPaths = ['/login']
+  const protectedApiPaths = ['/api']
+
+  if (path.startsWith('/api/')) {
     return NextResponse.next()
   }
 
@@ -27,7 +36,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Revisar token de cookies
   const token = request.cookies.get('token')?.value
   if (!token) {
     return NextResponse.redirect(new URL('/login', request.url))
@@ -37,5 +45,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/((?!_next/static|_next/image|favicon.ico|.*\\.(jpg|jpeg|png|gif|svg)).*)'
+  matcher: ['/:path*'] 
 }
