@@ -82,6 +82,9 @@ export const POST = async (request: NextRequest) => {
       facebookIcon: await imageToBase64(imageUrls.facebookIcon),
     };
 
+    console.log("images", images);
+    
+
     const pdfStream = await pdf(<PdfDocument formData={formData} images={images} />).toBuffer();
     const pdfBuffer = await toBufferFromStream(pdfStream);
     
