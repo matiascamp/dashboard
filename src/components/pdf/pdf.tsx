@@ -42,7 +42,8 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 4,fontSize: 14 },
   section: { marginVertical:15, gap: 8 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingBottom: 4 },
-  textBlock: { backgroundColor: '#f3f4f6', padding: 2, borderRadius: 8, minHeight: 150, fontSize: 12,width: '100%' },
+  textBlock: { backgroundColor: '#f3f4f6', padding: 8, borderRadius: 8, minHeight: 150, fontSize: 14,width: '100%' },
+  textBlockText: { fontSize: 14, width: '100%',overflow: 'hidden',textOverflow: 'ellipsis',whiteSpace: 'nowrap' },
   costRow: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f3f4f6', paddingVertical: 4 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#111827', padding: 12, borderRadius: 8 },
   totalLabel: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
@@ -80,7 +81,7 @@ const PdfDocument = ({ formData, images }: PdfDocumentProps) => (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Descripción del Trabajo</Text>
             <View style={styles.textBlock}>
-              <Text>{formData.text || 'No hay descripción disponible...'}</Text>
+              <Text style={styles.textBlockText}>{formData.text || 'No hay descripción disponible...'}</Text>
             </View>
           </View>
 
