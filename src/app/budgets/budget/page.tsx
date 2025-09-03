@@ -10,7 +10,6 @@ interface FormData {
   client: string;
   text: string;
   materialPrice: number;
-  inputs: number;
   labor: number;
   total?: number;
 }
@@ -21,7 +20,6 @@ export default function BudgetPage() {
     client: '',
     text: '',
     materialPrice: 0,
-    inputs: 0,
     labor: 0,
     total: 0
   });

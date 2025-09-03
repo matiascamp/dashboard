@@ -7,7 +7,7 @@ const NavBar = ({ children }: { children: ReactNode }) => {
   const { back } = useRouter()
   const pathname = usePathname()
 
-  const isHome = pathname === '/'
+  const isHome = pathname === '/' || pathname === '/login'
 
   return (
     <div className={isHome ? "h-full" : "flex relative w-full h-full"}>

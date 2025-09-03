@@ -6,7 +6,6 @@ export interface PDFFormData {
   client: string;
   text: string;
   materialPrice: number;
-  inputs: number;
   labor: number;
   total?: number;
 }
@@ -93,10 +92,6 @@ const PdfDocument = ({ formData, images }: PdfDocumentProps) => (
               <Text>${formData.materialPrice.toLocaleString()}</Text>
             </View>
             <View style={styles.costRow}>
-              <Text>Insumos:</Text>
-              <Text>${formData.inputs.toLocaleString()}</Text>
-            </View>
-            <View style={styles.costRow}>
               <Text>Mano de obra:</Text>
               <Text>${formData.labor.toLocaleString()}</Text>
             </View>
@@ -114,7 +109,7 @@ const PdfDocument = ({ formData, images }: PdfDocumentProps) => (
             </View>
             <View style={styles.socialRow}>
               <Image src={images.phoneIcon} style={{ width: 16, height: 16 }} />
-              <Text>Contacto telefónico disponible</Text>
+              <Text>(3329) 611-816</Text>
             </View>
             <View style={styles.socialRow}>
               <Image src={images.facebookIcon} style={{ width: 16, height: 16 }} />

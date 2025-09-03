@@ -7,7 +7,6 @@ interface FormData {
   client: string;
   text: string;
   materialPrice: number;
-  inputs: number;
   labor: number;
   total?: number;
 }
@@ -19,7 +18,7 @@ interface Props {
 
 export default function PdfPreview({ formData, setFormData }: Props) {
 
-  const total = +formData.materialPrice + +formData.inputs + +formData.labor;
+  const total = +formData.materialPrice + +formData.labor;
 
   useEffect(() => {
     setFormData({
@@ -27,7 +26,7 @@ export default function PdfPreview({ formData, setFormData }: Props) {
       total
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.materialPrice, formData.inputs, formData.labor]);
+  }, [formData.materialPrice, formData.labor]);
 
   return (
     <div className="w-full bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] border border-[var(--border)] animate-scale-in">
@@ -95,10 +94,6 @@ export default function PdfPreview({ formData, setFormData }: Props) {
                   <span className="text-gray-900">${formData.materialPrice.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="font-medium text-gray-700">Insumos:</span>
-                  <span className="text-gray-900">${formData.inputs.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="font-medium text-gray-700">Mano de obra:</span>
                   <span className="text-gray-900">${formData.labor.toLocaleString()}</span>
                 </div>
@@ -120,7 +115,7 @@ export default function PdfPreview({ formData, setFormData }: Props) {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Image src="/phone_icon.svg" alt="Teléfono" width={16} height={16} className="opacity-70" />
-                    <span>Contacto telefónico disponible</span>
+                    <span>(3329) 611-816</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Image src="/facebook_icon.svg" alt="Facebook" width={16} height={16} className="opacity-70" />
