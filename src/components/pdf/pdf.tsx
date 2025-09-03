@@ -37,18 +37,18 @@ const styles = StyleSheet.create({
     gap: 16,
     marginBottom: 15
   },
-  titleSection: { flexDirection: 'column', gap: 4 },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'left' },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  titleSection: { flexDirection: 'column', gap: 4, fontSize: 14 },
+  title: { fontSize: 18, fontWeight: 'bold', textAlign: 'left' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 4,fontSize: 14 },
   section: { marginVertical:15, gap: 8 },
   sectionTitle: { fontSize: 16, fontWeight: 'bold', borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingBottom: 4 },
-  textBlock: { backgroundColor: '#f3f4f6', padding: 8, borderRadius: 8, minHeight: 150 },
+  textBlock: { backgroundColor: '#f3f4f6', padding: 8, borderRadius: 8, minHeight: 150, fontSize: 14 },
   costRow: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f3f4f6', paddingVertical: 4 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#111827', padding: 12, borderRadius: 8 },
   totalLabel: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   totalValue: { color: '#fff', fontWeight: 'bold', fontSize: 20 },
-  footer: { marginTop: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb', paddingTop: 12, gap: 4 },
-  socialRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  footer: { marginTop: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb', paddingTop: 12, gap: 4, fontSize: 14 },
+  socialRow: { flexDirection: 'row', alignItems: 'center', gap: 4, fontSize: 14 },
 });
 
 const PdfDocument = ({ formData, images }: PdfDocumentProps) => (

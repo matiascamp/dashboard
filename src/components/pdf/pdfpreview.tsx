@@ -79,7 +79,7 @@ export default function PdfPreview({ formData, setFormData }: Props) {
                 Descripción del Trabajo
               </h3>
               <div className="min-h-[100px] max-w-100 wrap-break-word p-4 bg-gray-50 rounded-lg">
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed text-md">
                   {formData.text || 'No hay descripción disponible...'}
                 </p>
               </div>
