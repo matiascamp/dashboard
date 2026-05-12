@@ -7,7 +7,6 @@ interface FormDataProps {
   client: string;
   text: string;
   materialPrice: number;
-  inputs: number;
   labor: number;
 }
 
@@ -21,8 +20,12 @@ interface Props {
 export default function PdfForm({ formData, setFormData, onDownload, isGenerating }: Props) {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
+    // Solo validar después de que el usuario haya interactuado con el formulario
+    if (!hasInteracted) return;
+    
     const result = formDataSchema.safeParse(formData);
     if (!result.success) {
       const newErrors: Record<string, string> = {};
@@ -34,14 +37,20 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
     } else {
       setErrors({});
     }
-  }, [formData]);
+  }, [formData, hasInteracted]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Marcar que el usuario ha interactuado con el formulario
+    if (!hasInteracted) {
+      setHasInteracted(true);
+    }
+    
     setFormData({
       ...formData,
-      [name]: name === "materialPrice" || name === "inputs" || name === "labor"
-        ? parseFloat(value) || 0
+      [name]: name === "materialPrice" || name === "labor"
+        ? parseFloat(value) 
         : value
     });
   };
@@ -53,14 +62,6 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
       type: 'number',
       icon: Package,
       value: formData.materialPrice,
-      prefix: '$'
-    },
-    {
-      name: 'inputs',
-      label: 'Insumos',
-      type: 'number',
-      icon: Package,
-      value: formData.inputs,
       prefix: '$'
     },
     {
@@ -189,7 +190,7 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-[var(--foreground)]">Total:</span>
             <span className="text-2xl font-bold text-[var(--primary)]">
-              ${(formData.materialPrice + formData.inputs + formData.labor).toLocaleString()}
+              ${(formData.materialPrice + formData.labor).toLocaleString()}
             </span>
           </div>
         </div>

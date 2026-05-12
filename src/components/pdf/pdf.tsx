@@ -40,10 +40,10 @@ const styles = StyleSheet.create({
     gap: 16,
     marginBottom: 15
   },
-  titleSection: { flexDirection: 'column', gap: 4 },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'left' },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  section: { marginVertical:15, gap: 8 },
+  titleSection: { flexDirection: 'column', gap: 4, fontSize: 14 },
+  title: { fontSize: 18, fontWeight: 'bold', textAlign: 'left' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 4,fontSize: 14 },
+  section: { marginVertical:15, gap: 8},
   sectionTitle: { fontSize: 16, fontWeight: 'bold', borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingBottom: 4 },
   textBlock: { 
     backgroundColor: '#f3f4f6', 

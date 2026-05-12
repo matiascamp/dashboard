@@ -10,9 +10,8 @@ export const formDataSchema = z.object({
     .string()
     .min(1, "La descripción es obligatoria")
     .max(1000, "La descripción es demasiado larga"),
-  materialPrice: z.number().nonnegative("Debe ser un número positivo").min(1,"El monto de materiales es obligatorio"),
-  inputs: z.number().nonnegative("Debe ser un número positivo").min(1,"El monto de insumos es obligatorio"),
-  labor: z.number().nonnegative("Debe ser un número positivo").min(1,"El monto de mano de obra es obligatorio"),
+  materialPrice: z.number().nonnegative("Debe ser un número positivo").min(1,"El monto de materiales es obligatorio y mayor a 0"),
+  labor: z.number().nonnegative("Debe ser un número positivo").min(1,"El monto de mano de obra es obligatorio y mayor a 0"),
 });
 
 export type FormData = z.infer<typeof formDataSchema>;
