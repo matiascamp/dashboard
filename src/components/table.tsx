@@ -29,7 +29,13 @@ const Table = ({ columns, data, total }: TableProps) => {
         accessorKey: col.accessorKey,
         accessorFn: col.accessorKey === "monthYear" ? (row: Row) => new Date(row.year, row.month - 1, 1) : undefined,
         cell: (info: Info) => {
-            if (col.accessorKey === "date") return dayjs(info.getValue()).format("DD/MM/YYYY")
+            if (col.cell) return col.cell(info)
+            if (col.accessorKey === "date" || col.accessorKey === "createdDate") {
+                const raw = info.getValue() as string | number | Date | null | undefined
+                if (raw == null || raw === '') return '—'
+                const parsed = dayjs(raw)
+                return parsed.isValid() ? parsed.format("DD/MM/YYYY") : '—'
+            }
             if (col.accessorKey === "monthYear") return info.row.original.month + '-' + info.row.original.year
             if (col.accessorKey === "detail") return (
                 <button 

@@ -19,11 +19,19 @@ export async function GET(request: Request) {
           lt: new Date(year, month, 1),
         },
       },
+      orderBy: {
+        date: 'desc',
+      },
       select: {
+        id: true,
         amount: true,
         description: true,
         date: true,
         name: true,
+        type: true,
+        currency: true,
+        dollarRate: true,
+        amountOriginal: true,
       },
     })
 

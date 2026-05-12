@@ -1,13 +1,16 @@
 'use client'
 import Image from "next/image";
 import Link from "next/link";
-import { Calculator, FileText, TrendingUp, LogOut } from "lucide-react";
+import { useState } from "react";
+import { Calculator, FileText, TrendingUp, LogOut, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/context/authProvider";
 import { useRouter } from "next/navigation";
 
 const SideBar = () => {
     const { user, logout } = useAuth()
     const router = useRouter()
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
 
     const menuItems = [
         {
@@ -31,8 +34,14 @@ const SideBar = () => {
     ];
 
     const handleLogout = async () => {
-        await logout();
-        router.push('/login');
+        setIsLoggingOut(true)
+        try {
+            await logout();
+            toast.success('Sesión cerrada');
+            router.push('/login');
+        } finally {
+            setIsLoggingOut(false)
+        }
     };
 
     return (
@@ -126,20 +135,27 @@ const SideBar = () => {
             <footer className="p-6 border-t border-white/10">
 
                 <button
+                    type="button"
                     onClick={handleLogout}
+                    disabled={isLoggingOut}
                     className="
                      flex items-center space-x-3 w-full px-4 py-3 rounded-xl
                      text-gray-300 hover:text-white
                      hover:bg-red-500/20
                      transition-all duration-200
                      group
+                     disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-transparent
                  "
                 >
-                    <LogOut
-                        size={18}
-                        className="text-gray-400 group-hover:text-red-400 transition-colors duration-200"
-                    />
-                    <span className="font-medium">Cerrar sesión</span>
+                    {isLoggingOut ? (
+                        <Loader2 size={18} className="animate-spin text-gray-400" aria-hidden />
+                    ) : (
+                        <LogOut
+                            size={18}
+                            className="text-gray-400 group-hover:text-red-400 transition-colors duration-200"
+                        />
+                    )}
+                    <span className="font-medium">{isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'}</span>
                 </button>
 
             </footer>

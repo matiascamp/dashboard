@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from "react"
 import Table from "../../components/table"
+import { PageBlockLoader } from "@/components/page-block-loader"
 import { Calculator, TrendingUp, TrendingDown, DollarSign, Calendar } from "lucide-react"
 
 const columns = [
@@ -32,6 +33,7 @@ type Summary = {
 const AccountingEntry = () => {
   const [summaries, setSummaries] = useState<Summary[]>([])
   const [total, setTotal] = useState(0)
+  const [isLoadingSummaries, setIsLoadingSummaries] = useState(true)
   const [stats, setStats] = useState({
     totalDebit: 0,
     totalHavings: 0,
@@ -40,12 +42,16 @@ const AccountingEntry = () => {
 
   useEffect(() => {
     (async () => {
+      setIsLoadingSummaries(true)
       try {
         const response = await fetch('/api/summaries')
         const data = await response.json()
-        setSummaries(data)
+        setSummaries(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('Error cargando movimientos:', error)
+        setSummaries([])
+      } finally {
+        setIsLoadingSummaries(false)
       }
     })()
   }, [])
@@ -83,6 +89,9 @@ const AccountingEntry = () => {
             </h1>
           </div>
         </header>
+        {isLoadingSummaries ? (
+          <PageBlockLoader label="Cargando asientos contables..." className="mb-8" />
+        ) : (
         <div className="grid md:grid-cols-4 gap-6 mb-8 animate-scale-in">
           <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 shadow-[var(--shadow-md)]">
             <div className="flex items-center space-x-3">
@@ -137,7 +146,8 @@ const AccountingEntry = () => {
             </div>
           </div>
         </div>
-        {
+        )}
+        {!isLoadingSummaries && (
           columns.length ?
             <div className="animate-fade-in">
               <Table columns={columns} data={summaries} total={total} />
@@ -145,7 +155,7 @@ const AccountingEntry = () => {
             <div>
               <h1>Todavia no existen movimientos registrados</h1>
             </div>
-        }
+        )}
       </div>
     </div>
   )

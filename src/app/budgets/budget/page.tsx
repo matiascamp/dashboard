@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { PageBlockLoader } from '@/components/page-block-loader';
 import PdfForm from '@/components/pdf/form';
 import PdfPreview from '@/components/pdf/pdfpreview';
 // import Viewer from '@/components/pdf/viewer';
@@ -27,9 +30,11 @@ export default function BudgetPage() {
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
 
   useEffect(() => {
     (async () => {
+      setIsBootstrapping(true)
       try {
         const response = await fetch('/api/pdf/list')
         const data = await response.json()
@@ -42,6 +47,8 @@ export default function BudgetPage() {
 
       } catch (error) {
         console.error("error al obtener listado de pdf", error)
+      } finally {
+        setIsBootstrapping(false)
       }
     })()
   }, [])
@@ -49,30 +56,52 @@ export default function BudgetPage() {
   const handleDownload = async () => {
     setIsGenerating(true);
     try {
+      const issueDate = new Date().toISOString()
+
       const response = await fetch('/api/pdf/generatePdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, issueDate })
       });
 
       const data = await response.json()
 
-      if (!data.url) return
+      if (!response.ok) {
+        toast.error(typeof data?.error === 'string' ? data.error : 'Error al generar el PDF')
+        return
+      }
 
-      await fetch('/api/pdf/create', {
+      if (!data.url) {
+        toast.error('No se recibió la URL del documento')
+        return
+      }
+
+      const createRes = await fetch('/api/pdf/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          createdDate: new Date(),
+          createdDate: issueDate,
           clientName: formData.client,
           pdfUrl: data.url
         })
       })
 
-      window.open(data.url);
+      const createData = await createRes.json().catch(() => ({}))
 
+      if (!createRes.ok) {
+        toast.error(
+          typeof createData?.error === 'string' ? createData.error : 'No se pudo guardar el presupuesto'
+        )
+        return
+      }
+
+      toast.success('Presupuesto creado', {
+        description: 'El archivo se generó y quedó guardado en el historial.',
+      })
+      window.open(data.url);
     } catch (error) {
       console.error('Error al generar pdf:', error);
+      toast.error('Ocurrió un error al generar o guardar el presupuesto')
     } finally {
       setIsGenerating(false);
     }
@@ -88,8 +117,13 @@ export default function BudgetPage() {
             Crear Presupuesto
           </h1>
         </header>
-        <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
-          <div className="w-full flex-1">
+        <div className="relative flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+          {isBootstrapping && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-[var(--background)]/80 backdrop-blur-sm">
+              <PageBlockLoader label="Preparando formulario..." />
+            </div>
+          )}
+          <div className={`w-full flex-1 ${isBootstrapping ? 'pointer-events-none opacity-40' : ''}`}>
             <PdfForm
               formData={formData}
               setFormData={setFormData}
@@ -97,11 +131,21 @@ export default function BudgetPage() {
               isGenerating={isGenerating}
             />
           </div>
-          <div className="flex-1">
-            <PdfPreview 
-              formData={formData} 
-              setFormData={setFormData} 
-            />
+          <div className={`relative flex-1 ${isBootstrapping ? 'pointer-events-none opacity-40' : ''}`}>
+            <div className={isGenerating && !isBootstrapping ? 'pointer-events-none opacity-50 transition-opacity' : ''}>
+              <PdfPreview
+                formData={formData}
+                setFormData={setFormData}
+              />
+            </div>
+            {isGenerating && !isBootstrapping && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-[var(--background)]/50">
+                <div className="flex flex-col items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] px-5 py-4 shadow-lg">
+                  <Loader2 className="h-8 w-8 animate-spin text-[var(--primary)]" aria-hidden />
+                  <span className="text-sm font-medium text-[var(--foreground-secondary)]">Generando PDF...</span>
+                </div>
+              </div>
+            )}
           </div>
           {/* <Viewer formData={formData} /> */}
         </div>

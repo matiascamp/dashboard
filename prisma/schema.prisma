@@ -20,14 +20,17 @@ model MonthlySummary {
 }
 
 model MovementDetail {
-  id          Int      @id @default(autoincrement())
-  amount      Float
-  description String
-  date        DateTime
-  name        String
-  type        String
+  id               Int      @id @default(autoincrement())
+  amount           Float
+  description      String
+  date             DateTime
+  name             String
+  type             String
   monthlySummaryId Int
   monthlySummary   MonthlySummary @relation(fields: [monthlySummaryId], references: [id])
+  currency         String   @default("ARS")
+  dollarRate       Float?
+  amountOriginal   Float?
 }
 
 model Budgets {

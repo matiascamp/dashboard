@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 
 import "./globals.css";
 import NavBar from "@/components/navBar";
+import { AppToaster } from "@/components/app-toaster";
 
 import { AuthProvider } from "@/context/authProvider";
 
@@ -45,6 +46,7 @@ export default function RootLayout({
         `}
       >
         <AuthProvider>
+          <AppToaster />
           <NavBar>
             {children}
           </NavBar>
