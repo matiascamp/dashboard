@@ -42,7 +42,7 @@ const MovementsDetails = () => {
   const yearMonth = params['year-month']
 
   const [details, setDetails] = useState<Movement[]>([])
-  const [editingMovement, setEditingMovement] = useState<Movement | null>(null)
+  const [editingMovement, setEditingMovement] = useState<Movement | null | false>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isFetchingDetails, setIsFetchingDetails] = useState(true)
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null)
@@ -82,7 +82,7 @@ const MovementsDetails = () => {
   }, [yearMonth, loadDetails])
 
   const onEditClick = useCallback((movement: Movement) => {
-    setEditingMovement(movement)
+    setEditingMovement(false)
     const isUsd = movement.currency === 'USD'
     setEditFormData({
       name: movement.name,
@@ -211,12 +211,13 @@ const MovementsDetails = () => {
       cell: (info) => {
         const row = info.row.original as Movement
         const rowDeleting = isDeletingId === row.id
+        const rowBusy = rowDeleting || isSaving
         return (
           <div className="flex items-center justify-center gap-2">
             <button
               type="button"
-              disabled={rowDeleting}
-              className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--background-tertiary)] disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={rowBusy}
+              className="inline-flex items-center gap-1 rounded-lg border border-(--border) px-3 py-1 text-sm hover:bg-[var(--background-tertiary)] disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => onEditClick(row)}
             >
               <Pencil size={14} />
@@ -224,7 +225,7 @@ const MovementsDetails = () => {
             </button>
             <button
               type="button"
-              disabled={rowDeleting}
+              disabled={rowBusy}
               className="inline-flex items-center gap-1 rounded-lg border border-red-500/40 px-3 py-1 text-sm text-red-500 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
               onClick={() => onDeleteClick(Number(row.id))}
             >
@@ -239,7 +240,7 @@ const MovementsDetails = () => {
         )
       },
     }
-  ], [isDeletingId, onEditClick, onDeleteClick])
+  ], [[isDeletingId, isSaving, onEditClick, onDeleteClick]])
 
 
   return (

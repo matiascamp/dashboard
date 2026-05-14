@@ -8,8 +8,7 @@ export const formDataSchema = z.object({
     .max(100, "El nombre no puede superar los 100 caracteres"),
   text: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(1000, "La descripción es demasiado larga"),
+    .min(1, "La descripción es obligatoria"),
   materialPrice: z.number().nonnegative("Debe ser un número positivo").min(1,"El monto de materiales es obligatorio y mayor a 0"),
   labor: z.number().nonnegative("Debe ser un número positivo").min(1,"El monto de mano de obra es obligatorio y mayor a 0"),
 });

@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 export const movementSchema = z.object({
     name: z.string().min(1, "El nombre es obligatorio"),
@@ -6,9 +6,10 @@ export const movementSchema = z.object({
     description: z.string().min(1, "La descripción es obligatoria"),
     type: z.enum(["incoming", "outcoming"]),
     currency: z.enum(["ARS", "USD"]),
-    dollarRate: z.number().min(0.01, "La cotización debe ser mayor a 0").optional(),
+    /** En ARS el formulario envía 0; no debe exigirse mínimo 0.01 aquí (eso solo aplica en USD vía superRefine). */
+    dollarRate: z.number().min(0, "La cotización no puede ser negativa"),
   }).superRefine((data, ctx) => {
-    if (data.currency === "USD" && (!data.dollarRate || data.dollarRate <= 0)) {
+    if (data.currency === "USD" && data.dollarRate < 0.01) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["dollarRate"],
