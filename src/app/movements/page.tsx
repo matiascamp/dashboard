@@ -4,6 +4,11 @@ import Table from "../../components/table"
 import { PageBlockLoader } from "@/components/page-block-loader"
 import { Calculator, TrendingUp, TrendingDown, DollarSign, Calendar } from "lucide-react"
 
+function getPeriodLabel(month: number, year: number): string {
+  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  return `${months[month - 1]} ${year}`
+}
+
 const columns = [
   {
     accessorKey: 'debit',
@@ -14,12 +19,28 @@ const columns = [
     header: 'Haber'
   },
   {
-    accessorKey: 'monthYear',
-    header: 'Período'
+    accessorKey: 'periodLabel',
+    header: 'Período',
+    cell: ({ row }: { row: { original: Summary } }) => {
+      const { month, year } = row.original
+      return getPeriodLabel(month, year)
+    }
   },
   {
-    accessorKey: 'detail',
-    header: 'Acciones'
+    accessorKey: 'actions',
+    header: 'Acciones',
+    cell: ({ row }: { row: { original: Summary } }) => {
+      const { month, year } = row.original
+      const periodId = `${year}-${String(month).padStart(2, '0')}`
+      return (
+        <a
+          href={`/movements/${periodId}`}
+          className="text-blue-500 hover:text-blue-700 cursor-pointer font-medium"
+        >
+          Ver detalles
+        </a>
+      )
+    }
   }
 ]
 
@@ -46,7 +67,7 @@ const AccountingEntry = () => {
       try {
         const response = await fetch('/api/summaries')
         const data = await response.json()
-        setSummaries(Array.isArray(data) ? data : [])
+        setSummaries(Array.isArray(data) ? data : (data?.movements || []))
       } catch (error) {
         console.error('Error cargando movimientos:', error)
         setSummaries([])
@@ -147,13 +168,14 @@ const AccountingEntry = () => {
           </div>
         </div>
         )}
-        {!isLoadingSummaries && (
-          columns.length ?
+        {!isLoadingSummaries && summaries.length > 0 && (
             <div className="animate-fade-in">
-              <Table columns={columns} data={summaries} total={total} />
-            </div> :
-            <div>
-              <h1>Todavia no existen movimientos registrados</h1>
+              <Table columns={columns as any} data={summaries as any} total={total} />
+            </div>
+        )}
+        {!isLoadingSummaries && summaries.length === 0 && (
+            <div className="text-center text-xl text-[var(--foreground-muted)]">
+              Todavía no existen movimientos registrados
             </div>
         )}
       </div>

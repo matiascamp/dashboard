@@ -32,6 +32,7 @@ export async function GET(request: Request) {
         currency: true,
         dollarRate: true,
         amountOriginal: true,
+        invoice: true,
       },
     })
 

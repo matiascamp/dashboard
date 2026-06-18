@@ -1,35 +1,67 @@
-import { prisma } from '@/lib/prisma'
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-export const GET = async () => {
+interface MovementSummaryResponse {
+  totalDebit: number;
+  totalHavings: number;
+  periodsCount: number;
+  invoicesPending: number;
+  movements: any[];
+}
+
+async function getMovementsData(_invoiceStatus: string): Promise<MovementSummaryResponse> {
+  // Agrupar por año y mes usando MonthlySummary
+  const summaries = await prisma.monthlySummary.findMany({
+    select: {
+      year: true,
+      month: true,
+      debit: true,
+      havings: true,
+    },
+  });
+
+  // Ordenar en JavaScript
+  summaries.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.month - b.month;
+  });
+
+  const movements = summaries
+    .filter((s: { year: number; month: number; debit: number | null; havings: number | null }) => 
+      (s.debit || 0) > 0 || (s.havings || 0) > 0
+    )
+    .map((s: { year: number; month: number; debit: number; havings: number }) => ({
+    year: s.year,
+    month: s.month,
+    debit: s.debit || 0,
+    havings: s.havings || 0,
+    invoicesPending: 0,
+  }));
+
+  const totalDebit = movements.filter((m) => m.debit > 0 || m.havings > 0).reduce((acc: number, m: { debit: number }) => acc + m.debit, 0);
+  const totalHavings = movements.reduce((acc: number, m: { havings: number }) => acc + m.havings, 0);
+  
+  const periodsCountSet = new Set(movements.map((m: { year: number; month: number }) => `${m.year}-${String(m.month).padStart(2, '0')}`));
+
+  return {
+    totalDebit,
+    totalHavings,
+    periodsCount: periodsCountSet.size,
+    invoicesPending: 0,
+    movements,
+  };
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const invoiceStatusFromQuery = searchParams.get('invoiceStatus') || 'todos';
+  const normalizedInvoiceStatus = invoiceStatusFromQuery === 'facturando' ? 'a facturar' : invoiceStatusFromQuery;
+
   try {
-
-    const resumen = await prisma.$queryRaw<{
-      year: bigint
-      month: bigint
-      debit: number
-      havings: number
-    }[]>`
-        SELECT
-        EXTRACT(YEAR FROM date) AS year,
-        EXTRACT(MONTH FROM date) AS month,
-        SUM(CASE WHEN type = 'outcoming' THEN amount ELSE 0 END) AS debit,
-        SUM(CASE WHEN type = 'incoming' THEN amount ELSE 0 END) AS havings
-      FROM "MovementDetail"
-      GROUP BY year, month
-      ORDER BY year DESC, month DESC
-      `
-
-    const resumenConvertido = resumen.map(item => ({
-      year: Number(item.year),
-      month: Number(item.month),
-      debit: item.debit,
-      havings: item.havings,
-    }))
-
-    return NextResponse.json(resumenConvertido)
+    const summary = await getMovementsData(normalizedInvoiceStatus);
+    return NextResponse.json(summary);
   } catch (error) {
-    console.error('Error al intentar obtener asiento contable:', error)
-    return NextResponse.json({ error: ' al intentar obtener asiento contable:' }, { status: 500 })
+    console.error('Error al obtener resúmenes de movimientos:', error);
+    return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 });
   }
 }

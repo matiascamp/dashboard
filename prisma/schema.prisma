@@ -31,6 +31,7 @@ model MovementDetail {
   currency         String   @default("ARS")
   dollarRate       Float?
   amountOriginal   Float?
+  invoice          String   @default("a facturar")
 }
 
 model Budgets {

@@ -29,7 +29,7 @@ export const PATCH = async (
     const { id } = await params
     const movementId = Number(id)
     const body = await req.json()
-    const { name, description, type, amount, dollarRate, amountOriginal } = body
+    const { name, description, type, amount, dollarRate, amountOriginal, invoice } = body
 
     if (!movementId || !name || !description || !type) {
       return NextResponse.json({ error: 'Faltan datos' }, { status: 400 })
@@ -81,6 +81,7 @@ export const PATCH = async (
           dollarRate: Number(dollarRate),
           amountOriginal: Number(amountOriginal),
         }),
+        ...(invoice !== undefined && { invoice }),
       },
     })
 

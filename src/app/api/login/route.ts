@@ -21,11 +21,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 });
     }
 
-    const accessToken = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: "15m" });
+    const accessToken = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: "7d" });
     const refreshToken = jwt.sign({ id: user.id }, process.env.JWT_REFRESH_SECRET!, { expiresIn: "7d" });
 
     const res = NextResponse.json({ token: accessToken });
-    res.cookies.set("token", accessToken, { httpOnly: true, path: "/", maxAge: 15 * 60 });
+res.cookies.set("token", accessToken, { httpOnly: true, path: "/", maxAge: 7 * 24 * 60 * 60 });
     res.cookies.set("refreshToken", refreshToken, { httpOnly: true, path: "/", maxAge: 7 * 24 * 60 * 60 });
 
     return res;

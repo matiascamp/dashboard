@@ -18,16 +18,18 @@ type Movement = {
   currency?: string
   dollarRate?: number | null
   amountOriginal?: number | null
+  invoice?: "a facturar" | "no factura"
 }
 
-type MovementFormData = {
-  name: string
-  description: string
-  amount: number
-  type: 'incoming' | 'outcoming'
-  dollarRate: number
-  amountOriginal: number
-}
+ type MovementFormData = {
+   name: string
+   description: string
+   amount: number
+   type: 'incoming' | 'outcoming'
+   dollarRate: number
+   amountOriginal: number
+   invoice: "a facturar" | "no factura"
+ }
 
 const getMonthName = (monthNumber: string) => {
   const months = [
@@ -46,16 +48,24 @@ const MovementsDetails = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [isFetchingDetails, setIsFetchingDetails] = useState(true)
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null)
-  const [editFormData, setEditFormData] = useState<MovementFormData>({
+const [editFormData, setEditFormData] = useState<MovementFormData>({
     name: '',
     description: '',
     amount: 0,
     type: 'incoming',
     dollarRate: 0,
     amountOriginal: 0,
-  })
+    invoice: 'a facturar',
+})
 
   const [periodInfo, setPeriodInfo] = useState({ year: '', month: '' })
+const [invoiceFilter, setInvoiceFilter] = useState<'all' | 'a facturar' | 'no factura'>('all')
+const filteredDetails = useMemo(() => details.filter(m => {
+  if (invoiceFilter === 'all') return true
+  const normalized = m.invoice ?? '-'
+  if (normalized === '-') return invoiceFilter === 'a facturar' // null/empty treat as default
+  return normalized === invoiceFilter
+}), [details, invoiceFilter])
 
   const loadDetails = useCallback(async (year: string, month: string) => {
     setIsFetchingDetails(true)
@@ -82,8 +92,8 @@ const MovementsDetails = () => {
   }, [yearMonth, loadDetails])
 
   const onEditClick = useCallback((movement: Movement) => {
-    setEditingMovement(false)
-    const isUsd = movement.currency === 'USD'
+    setEditingMovement(movement);
+    const isUsd = movement.currency === 'USD';
     setEditFormData({
       name: movement.name,
       description: movement.description,
@@ -91,8 +101,9 @@ const MovementsDetails = () => {
       type: movement.type,
       dollarRate: isUsd ? (movement.dollarRate ?? 0) : 0,
       amountOriginal: isUsd ? (movement.amountOriginal ?? 0) : 0,
-    })
-  }, [])
+      invoice: (movement as any).invoice ?? 'a facturar',
+    });
+  }, []);
 
   const onDeleteClick = useCallback(async (movementId: number) => {
     const confirmed = window.confirm('¿Querés eliminar este movimiento?')
@@ -142,6 +153,7 @@ const MovementsDetails = () => {
           amount: isUsd
             ? editFormData.amountOriginal * editFormData.dollarRate
             : editFormData.amount,
+          invoice: editFormData.invoice,
         }),
       })
 
@@ -178,6 +190,20 @@ const MovementsDetails = () => {
       cell: (info) => info.getValue() === 'incoming' ? 'Ingreso' : 'Egreso',
     },
     {
+      accessorFn: (row: Movement) => (row.invoice ?? '-'),
+      accessorKey: 'invoice',
+      header: 'Factura',
+      cell: (info) => {
+        const value = info.getValue() as string | null | undefined
+        const displayText = !value || value === '' ? '-' : value === 'a facturar' ? 'A facturar' : value === 'no factura' ? 'No factura' : value
+        return (
+          <span className="inline-flex items-center justify-center min-w-[80px] px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 whitespace-nowrap">
+            {displayText}
+          </span>
+        )
+      }
+    },
+    {
       accessorKey: 'amount',
       header: 'Monto',
       cell: (info) => {
@@ -201,7 +227,7 @@ const MovementsDetails = () => {
         )
       },
     },
-    {
+        {
       accessorKey: 'date',
       header: 'Fecha'
     },
@@ -285,7 +311,23 @@ const MovementsDetails = () => {
           <PageBlockLoader label="Cargando movimientos del período..." />
         ) : details.length > 0 ? (
           <div className="relative animate-fade-in">
-            <Table columns={columns} data={details} />
+            <div className="flex items-center justify-between mb-4">
+          <div>
+            {/* Optional filter description */}
+          </div>
+          <div className="flex space-x-2">
+            <button onClick={()=>setInvoiceFilter('all')} className={`inline-flex items-center justify-center min-w-[70px] px-3 py-2 rounded-full text-sm font-medium transition-colors duration-150 ease-in-out ${invoiceFilter === 'all' ? 'bg-[var(--primary)] text-white' : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'}`}>
+              Todos ({details.length})
+            </button>
+            <button onClick={()=>setInvoiceFilter('a facturar')} className={`inline-flex items-center justify-center min-w-[70px] px-3 py-2 rounded-full text-sm font-medium transition-colors duration-150 ease-in-out ${invoiceFilter === 'a facturar' ? 'bg-yellow-500 text-white' : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'}`}>
+              A facturar ({details.filter(m => m.invoice === 'a facturar').length})
+            </button>
+            <button onClick={() => setInvoiceFilter('no factura')} className={`inline-flex items-center justify-center min-w-[70px] px-3 py-2 rounded-full text-sm font-medium transition-colors duration-150 ease-in-out ${invoiceFilter === 'no factura' ? 'bg-green-500 text-white' : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'}`}>
+              No factura ({details.filter(m => m.invoice === 'no factura').length})
+            </button>
+          </div>
+        </div>
+        <Table columns={columns} data={filteredDetails} />
             {isFetchingDetails && (
               <div
                 className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-[var(--background)]/70 backdrop-blur-[1px]"
@@ -356,7 +398,7 @@ const MovementsDetails = () => {
                 <input
                   id="edit-name"
                   value={editFormData.name}
-                  onChange={e => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-3"
                 />
               </div>
@@ -372,6 +414,21 @@ const MovementsDetails = () => {
                   className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-3"
                   rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="edit-invoice">
+                  Factura
+                </label>
+                <select
+                  id="edit-invoice"
+                  value={(editFormData.invoice as any) ?? 'a facturar'}
+                  onChange={e => setEditFormData(prev => ({ ...prev, invoice: e.target.value as "a facturar" | "no factura" }))}
+                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-3"
+                >
+                  <option value="a facturar">A facturar</option>
+                  <option value="no factura">No factura</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
