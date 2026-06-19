@@ -175,7 +175,7 @@ const MovementsDetails = () => {
 
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({ error: 'Error desconocido al actualizar.' }));
-        const errorMessage = typeof errBody?.error === 'string' 
+        const errorMessage = (typeof errBody?.error === 'string' 
           ? errBody.error 
-          : 'No se pudo actualizar el movimiento'; // Correctly closes the string and assignment logic
+          : 'No se pudo actualizar el movimiento') as string;
         throw new Error(errorMessage);
