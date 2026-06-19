@@ -1,3 +1,5 @@
+import React from 'react';
+
 type originalProps = {
     id?: number;
     name?: string;
@@ -40,5 +42,5 @@ export interface DataProps {
 export interface ColumnsProps {
     accessorKey: string;
     header: string;
-    cell?: (info: Info) => any; // Using 'any' here only if explicit typeing fails across the whole project, but it's better to use a more specific functional type.
+    cell?: (info: Info) => React.ReactNode;
 }
