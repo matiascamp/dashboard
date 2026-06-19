@@ -1,16 +1,15 @@
-
-
 type originalProps = {
     id?: number;
     name?: string;
     description?: string;
     amount?: number;
-    type?: string;
+    type?: "incoming" | "outcoming";
     date?: string | Date;
-    year?: string |number | undefined;
+    year?: string | number | undefined;
     month?: string | number | undefined;
-    pdfUrl?: string ;
-    [key: string]: unknown;
+    pdfUrl?: string;
+    // Allow other properties for flexibility, but type constraints should be applied where possible.
+    [key: string]: unknown; 
 }
 
 type InfoRow = {
@@ -19,7 +18,7 @@ type InfoRow = {
 
 export interface Info {
     row: InfoRow;
-    getValue: () => unknown
+    getValue: () => string | number | null | undefined
 }
 
 export interface DataProps {
@@ -28,18 +27,18 @@ export interface DataProps {
     description?: string;
     date?: string | Date;
     name?: string;
-    type?: string;
-    actions?: unknown;
+    type?: "incoming" | "outcoming";
+    actions?: unknown; // Keeping this loose if component usage requires it
     year?: string | number;
     month?: string | number;
     pdfUrl?: string;
-    debit?: number
-    havings?: number
-    [key: string]: unknown
+    debit?: number;
+    havings?: number;
+    [key: string]: unknown;
 }
 
-export interface ColumnsProps  {
+export interface ColumnsProps {
     accessorKey: string;
     header: string;
-    cell?: (info: Info) => unknown;
+    cell?: (info: Info) => any; // Using 'any' here only if explicit typeing fails across the whole project, but it's better to use a more specific functional type.
 }
