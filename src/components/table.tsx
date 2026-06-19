@@ -118,7 +118,7 @@ const columnsTable = useMemo(() => {
             // Fallback for display: return the value cast as ReactNode if possible.
             return info.getValue() as React.ReactNode;
         }
-    })) as any[] 
+    })) as ColumnsProps[] 
     }, [columns, router]);
 
     // Effect hook to set default sorting when columns are available

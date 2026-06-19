@@ -1,15 +1,24 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+interface MovementRecord {
+  year: number;
+  month: number;
+  debit: number;
+  havings: number;
+  invoicesPending: number;
+}
+
 interface MovementSummaryResponse {
   totalDebit: number;
   totalHavings: number;
   periodsCount: number;
   invoicesPending: number;
-  movements: any[];
+  movements: MovementRecord[];
 }
 
 async function getMovementsData(_invoiceStatus: string): Promise<MovementSummaryResponse> {
+  // Parameter is intentionally unused - the summary data is period-based, not invoice status-based
   // Agrupar por año y mes usando MonthlySummary
   const summaries = await prisma.monthlySummary.findMany({
     select: {

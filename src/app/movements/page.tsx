@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from "react"
 import Table from "../../components/table"
+import { ColumnsProps, DataProps } from "@/interfaces"
 import { PageBlockLoader } from "@/components/page-block-loader"
 import { Calculator, TrendingUp, TrendingDown, DollarSign, Calendar } from "lucide-react"
 
@@ -9,7 +10,7 @@ function getPeriodLabel(month: number, year: number): string {
   return `${months[month - 1]} ${year}`
 }
 
-const columns = [
+const columns: ColumnsProps[] = [
   {
     accessorKey: 'debit',
     header: 'Debe'
@@ -21,16 +22,18 @@ const columns = [
   {
     accessorKey: 'periodLabel',
     header: 'Período',
-    cell: ({ row }: { row: { original: Summary } }) => {
-      const { month, year } = row.original
+    cell: (info) => {
+      const row = info.row.original as Summary
+      const { month, year } = row
       return getPeriodLabel(month, year)
     }
   },
   {
     accessorKey: 'actions',
     header: 'Acciones',
-    cell: ({ row }: { row: { original: Summary } }) => {
-      const { month, year } = row.original
+    cell: (info) => {
+      const row = info.row.original as Summary
+      const { month, year } = row
       const periodId = `${year}-${String(month).padStart(2, '0')}`
       return (
         <a
@@ -170,7 +173,7 @@ const AccountingEntry = () => {
         )}
         {!isLoadingSummaries && summaries.length > 0 && (
             <div className="animate-fade-in">
-              <Table columns={columns as any} data={summaries as any} total={total} />
+              <Table columns={columns} data={summaries as DataProps[]} total={total} />
             </div>
         )}
         {!isLoadingSummaries && summaries.length === 0 && (

@@ -21,7 +21,7 @@ type BaseMovement = {
   invoice?: "a facturar" | "no factura";
 };
 
-type Movement = BaseMovement & { [key: string]: any };
+type Movement = BaseMovement & Record<string, unknown>;
 
 type MovementFormData = {
   name: string;
@@ -31,7 +31,7 @@ type MovementFormData = {
   dollarRate: number;
   amountOriginal: number;
   invoice: "a facturar" | "no factura";
-} & { [key: string]: any };
+} & Record<string, unknown>;
 
 const getMonthName = (monthNumber: string): string => {
   const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -143,7 +143,7 @@ const MovementsDetails = () => {
 
     setIsSaving(true);
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         ...editFormData,
         amount: isUsd
           ? editFormData.amountOriginal * editFormData.dollarRate
@@ -160,7 +160,8 @@ const MovementsDetails = () => {
       });
 
       if (!res.ok) {
-        let errorDetails = await res.json().catch(() => ({ error: 'Error desconocido al actualizar.' }));
+        const errorResponse = await res.json().catch(() => ({ error: 'Error desconocido al actualizar.' }));
+        const errorDetails = errorResponse;
         const errorMessage = typeof errorDetails?.error === 'string' 
           ? String(errorDetails.error) 
           : 'No se pudo actualizar el movimiento';
