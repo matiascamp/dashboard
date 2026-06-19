@@ -9,8 +9,11 @@ const images = {
     facebookIcon: '/facebook_icon.png'
   };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const Viewer = ({formData}:any) => {
+type ViewerProps = {
+  formData: import('./pdf').PDFFormData;
+};
+
+const Viewer = ({ formData }: ViewerProps) => {
   return (
     <PDFViewer>
     <PdfDocument formData={formData} images={images}/>

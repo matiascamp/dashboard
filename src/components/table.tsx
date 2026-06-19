@@ -55,7 +55,7 @@ const columnsTable = useMemo(() => {
             // Fallback attempt for specific keys if direct access fails
             const knownKeys: Array<keyof DataProps> = ['date', 'createdDate'];
             if (knownKeys.includes(col.accessorKey as keyof DataProps)) {
-                return (row as any)[col.accessorKey]; // Fallback to dynamic casting only when necessary
+                return (row as Record<string, unknown>)[col.accessorKey] as unknown;
             }
 
             return undefined;
