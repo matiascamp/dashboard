@@ -4,7 +4,7 @@ import Table from '../../../components/table';
 import { useParams } from 'next/navigation';
 import { PageBlockLoader } from '@/components/page-block-loader';
 import { FileSearch, Calendar, DollarSign, FileText, Loader2, Pencil, Trash2, X, Save, Check } from 'lucide-react';
-import { ColumnsProps } from '@/interfaces';
+import { ColumnsProps, Info } from '@/interfaces';
 import { toast } from 'sonner';
 
 // Defines a Movement object structure.
@@ -209,7 +209,7 @@ const MovementsDetails = () => {
     { 
       accessorKey: 'actions', 
       header: 'Acciones',
-      cell: (info: any) => {
+      cell: (info: Info) => {
         const movement = info.row.original as Movement;
         return (
           <div className="flex items-center justify-center gap-2">
