@@ -1,9 +1,9 @@
 'use client'
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Table from '../../../components/table';
 import { useParams } from 'next/navigation';
 import { PageBlockLoader } from '@/components/page-block-loader';
-import { FileSearch, Calendar, DollarSign, FileText, Loader2, Pencil, Trash2, X, Save } from 'lucide-react';
+import { FileSearch, Calendar, DollarSign, FileText, Loader2, Pencil, Trash2, X, Save, Check } from 'lucide-react';
 import { ColumnsProps } from '@/interfaces';
 import { toast } from 'sonner';
 
@@ -60,6 +60,19 @@ const MovementsDetails = () => {
 
   const [periodInfo, setPeriodInfo] = useState<{ year: string; month: string }>({ year: '', month: '' });
   const [invoiceFilter, setInvoiceFilter] = useState<'all' | 'a facturar' | 'no factura'>('all');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const filteredDetails = useMemo(() => details.filter(m => {
     if (invoiceFilter === 'all') return true;
@@ -193,7 +206,43 @@ const MovementsDetails = () => {
     { accessorKey: 'type', header: 'Tipo' },
     { accessorKey: 'date', header: 'Fecha' },
     { accessorKey: 'invoice', header: 'Factura' },
-    { accessorKey: 'actions', header: 'Acciones' },
+    { 
+      accessorKey: 'actions', 
+      header: 'Acciones',
+      cell: (info: any) => {
+        const movement = info.row.original as Movement;
+        return (
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditClick(movement);
+              }}
+              disabled={isDeletingId === movement.id}
+              className="p-2 rounded-lg text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors duration-200 disabled:opacity-50"
+              title="Editar movimiento"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteClick(movement.id);
+              }}
+              disabled={isDeletingId === movement.id}
+              className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors duration-200 disabled:opacity-50"
+              title="Eliminar movimiento"
+            >
+              {isDeletingId === movement.id ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+        );
+      }
+    },
   ];
 
   // Map movements to table rows with year/month for the detail link
@@ -203,201 +252,254 @@ const MovementsDetails = () => {
     month: periodInfo.month,
   })), [filteredDetails, periodInfo]);
 
+  // Calculate summary values
+  const totalIncoming = useMemo(() => 
+    filteredDetails.filter(m => m.type === 'incoming').reduce((sum, m) => sum + m.amount, 0),
+    [filteredDetails]
+  );
+
+  const totalOutgoing = useMemo(() => 
+    filteredDetails.filter(m => m.type === 'outcoming').reduce((sum, m) => sum + m.amount, 0),
+    [filteredDetails]
+  );
+
+  const balance = totalIncoming - totalOutgoing;
+
   return (
-    <div className="p-6 space-y-4">
-      {isFetchingDetails && !yearMonth ? (
-        <PageBlockLoader label="Cargando movimientos..." />
-      ) : (
-        <>
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Calendar className="w-6 h-6" />
-            Movimientos de {getMonthName(periodInfo.month)} {periodInfo.year}
-          </h1>
-          <div className="flex gap-2">
-            <select
-              value={invoiceFilter}
-              onChange={(e) => setInvoiceFilter(e.target.value as 'all' | 'a facturar' | 'no factura')}
-              className="px-3 py-2 border rounded-md"
-            >
-              <option value="all">Todos</option>
-              <option value="a facturar">A facturar</option>
-              <option value="no factura">No factura</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <DollarSign className="w-8 h-8 text-green-600" />
-            <div>
-              <p className="text-sm text-green-600">Total Ingresos</p>
-              <p className="text-xl font-bold text-green-800">
-                ${filteredDetails.filter(m => m.type === 'incoming').reduce((sum, m) => sum + m.amount, 0).toLocaleString()}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <DollarSign className="w-8 h-8 text-red-600" />
-            <div>
-              <p className="text-sm text-red-600">Total Gastos</p>
-              <p className="text-xl font-bold text-red-800">
-                ${filteredDetails.filter(m => m.type === 'outcoming').reduce((sum, m) => sum + m.amount, 0).toLocaleString()}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <FileText className="w-8 h-8 text-blue-600" />
-            <div>
-              <p className="text-sm text-blue-600">Balance</p>
-              <p className="text-xl font-bold text-blue-800">
-                ${(filteredDetails.filter(m => m.type === 'incoming').reduce((sum, m) => sum + m.amount, 0) -
-                   filteredDetails.filter(m => m.type === 'outcoming').reduce((sum, m) => sum + m.amount, 0)).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Table with editing capability */}
-        <Table columns={columns} data={tableData} total={undefined} />
-
-        {/* Inline editing section for the selected movement */}
-        {editingMovement && (
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Editar movimiento</h2>
-              <button
-                onClick={onCancelEdit}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                <input
-                  type="text"
-                  value={editFormData.name}
-                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--background-secondary)] to-[var(--background-tertiary)]">
+      <div className="container mx-auto px-6 py-8">
+        {isFetchingDetails && !yearMonth ? (
+          <PageBlockLoader label="Cargando movimientos..." />
+        ) : (
+          <>
+            <header className="text-center mb-8 animate-fade-in">
+              <div className="flex items-center justify-center space-x-3 mb-2">
+                <div className="p-3 bg-[var(--primary)]/10 rounded-2xl">
+                  <Calendar className="h-8 w-8 text-[var(--primary)]" />
+                </div>
+                <h1 className="text-3xl font-bold text-[var(--foreground)]">
+                  Movimientos de {getMonthName(periodInfo.month)} {periodInfo.year}
+                </h1>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                <input
-                  type="text"
-                  value={editFormData.description}
-                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Monto</label>
-                <input
-                  type="number"
-                  value={editFormData.amount}
-                  onChange={(e) => setEditFormData({ ...editFormData, amount: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                <select
-                  value={editFormData.type}
-                  onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value as 'incoming' | 'outcoming' })}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            </header>
+
+            {/* Filter and Summary Cards */}
+            <div className="flex items-center justify-between mb-6 animate-fade-in">
+              <div className="relative" ref={filterRef}>
+                <button
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="flex items-center gap-2 pl-10 pr-4 py-3 bg-[var(--input-bg)] border border-[var(--border)] rounded-xl text-[var(--foreground)] hover:border-[var(--primary)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200 cursor-pointer font-medium min-w-[180px] text-left"
                 >
-                  <option value="incoming">Ingreso</option>
-                  <option value="outcoming">Gasto</option>
-                </select>
+                  <FileSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)] pointer-events-none" />
+                  <span className="flex-1">
+                    {invoiceFilter === 'all' ? 'Todos' : invoiceFilter === 'a facturar' ? 'A facturar' : 'No factura'}
+                  </span>
+                  <svg 
+                    className={`w-4 h-4 text-[var(--foreground-muted)] transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {/* Custom dropdown menu */}
+                {isFilterOpen && (
+                  <div className="absolute top-full left-0 mt-2 bg-[var(--card-bg)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-lg)] overflow-hidden z-50 min-w-[180px] animate-scale-in">
+                    {[
+                      { value: 'all', label: 'Todos' },
+                      { value: 'a facturar', label: 'A facturar' },
+                      { value: 'no factura', label: 'No factura' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setInvoiceFilter(option.value as 'all' | 'a facturar' | 'no factura');
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-4 py-3 text-sm transition-colors duration-200 ${
+                          invoiceFilter === option.value
+                            ? 'bg-[var(--primary)]/10 text-[var(--primary)] font-medium'
+                            : 'text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                        }`}
+                      >
+                        {invoiceFilter === option.value && (
+                          <Check className="w-4 h-4" />
+                        )}
+                        <span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              {editingMovement.currency === 'USD' && (
-                <>
+
+              {/* Summary Cards */}
+              <div className="flex items-center gap-3">
+                {/* Ingresos Card */}
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
+                  totalIncoming >= 0 
+                    ? 'bg-[var(--success-bg)] border-[var(--success-border)]' 
+                    : 'bg-[var(--error-bg)] border-[var(--error-border)]'
+                }`}>
+                  <DollarSign className={`w-6 h-6 ${totalIncoming >= 0 ? 'text-[var(--success)]' : 'text-[var(--error)]'}`} />
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Cotización USD</label>
+                    <p className="text-xs text-[var(--foreground-muted)]">Ingresos</p>
+                    <p className={`text-lg font-bold ${totalIncoming >= 0 ? 'text-[var(--success)]' : 'text-[var(--error)]'}`}>
+                      ${totalIncoming.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                {/* Gastos Card */}
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
+                  totalOutgoing >= 0 
+                    ? 'bg-[var(--error-bg)] border-[var(--error-border)]' 
+                    : 'bg-[var(--success-bg)] border-[var(--success-border)]'
+                }`}>
+                  <DollarSign className={`w-6 h-6 ${totalOutgoing >= 0 ? 'text-[var(--error)]' : 'text-[var(--success)]'}`} />
+                  <div>
+                    <p className="text-xs text-[var(--foreground-muted)]">Gastos</p>
+                    <p className={`text-lg font-bold ${totalOutgoing >= 0 ? 'text-[var(--error)]' : 'text-[var(--success)]'}`}>
+                      ${totalOutgoing.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                {/* Balance Card */}
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 ${
+                  balance >= 0 
+                    ? 'bg-[var(--success-bg)] border-[var(--success)]' 
+                    : 'bg-[var(--error-bg)] border-[var(--error)]'
+                }`}>
+                  <FileText className={`w-6 h-6 ${balance >= 0 ? 'text-[var(--success)]' : 'text-[var(--error)]'}`} />
+                  <div>
+                    <p className="text-xs text-[var(--foreground-muted)]">Balance</p>
+                    <p className={`text-lg font-bold ${balance >= 0 ? 'text-[var(--success)]' : 'text-[var(--error)]'}`}>
+                      ${balance.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Table with editing capability */}
+            <div className="animate-fade-in">
+              <Table columns={columns} data={tableData} total={undefined} />
+            </div>
+
+            {/* Inline editing section for the selected movement */}
+            {editingMovement && (
+              <div className="mt-6 bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl shadow-[var(--shadow-lg)] p-6 animate-scale-in">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-lg font-semibold text-[var(--foreground)]">Editar movimiento</h2>
+                  <button
+                    onClick={onCancelEdit}
+                    className="p-2 rounded-lg text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--border)] transition-colors duration-200"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Nombre</label>
                     <input
-                      type="number"
-                      value={editFormData.dollarRate}
-                      onChange={(e) => setEditFormData({ ...editFormData, dollarRate: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      type="text"
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Monto USD</label>
+                    <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Descripción</label>
                     <input
-                      type="number"
-                      value={editFormData.amountOriginal}
-                      onChange={(e) => setEditFormData({ ...editFormData, amountOriginal: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      type="text"
+                      value={editFormData.description}
+                      onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
                     />
                   </div>
-                </>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Factura</label>
-                <select
-                  value={editFormData.invoice}
-                  onChange={(e) => setEditFormData({ ...editFormData, invoice: e.target.value as "a facturar" | "no factura" })}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="a facturar">A facturar</option>
-                  <option value="no factura">No factura</option>
-                </select>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Monto</label>
+                    <input
+                      type="number"
+                      value={editFormData.amount}
+                      onChange={(e) => setEditFormData({ ...editFormData, amount: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Tipo</label>
+                    <select
+                      value={editFormData.type}
+                      onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value as 'incoming' | 'outcoming' })}
+                      className="w-full px-3 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
+                    >
+                      <option value="incoming">Ingreso</option>
+                      <option value="outcoming">Gasto</option>
+                    </select>
+                  </div>
+                  {editingMovement.currency === 'USD' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Cotización USD</label>
+                        <input
+                          type="number"
+                          value={editFormData.dollarRate}
+                          onChange={(e) => setEditFormData({ ...editFormData, dollarRate: parseFloat(e.target.value) || 0 })}
+                          className="w-full px-3 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Monto USD</label>
+                        <input
+                          type="number"
+                          value={editFormData.amountOriginal}
+                          onChange={(e) => setEditFormData({ ...editFormData, amountOriginal: parseFloat(e.target.value) || 0 })}
+                          className="w-full px-3 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">Factura</label>
+                    <select
+                      value={editFormData.invoice}
+                      onChange={(e) => setEditFormData({ ...editFormData, invoice: e.target.value as "a facturar" | "no factura" })}
+                      className="w-full px-3 py-2.5 bg-[var(--input-bg)] border border-[var(--border)] rounded-lg text-[var(--foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all duration-200"
+                    >
+                      <option value="a facturar">A facturar</option>
+                      <option value="no factura">No factura</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 mt-5">
+                  <button
+                    onClick={onSaveEdit}
+                    disabled={isSaving}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--primary)] text-white rounded-xl hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+                  >
+                    <Save className="w-4 h-4" />
+                    {isSaving ? 'Guardando...' : 'Guardar'}
+                  </button>
+                  <button
+                    onClick={onCancelEdit}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--border)] text-[var(--foreground)] rounded-xl hover:bg-[var(--border)]/80 transition-all duration-200 font-medium"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancelar
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <button
-                onClick={onSaveEdit}
-                disabled={isSaving}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                {isSaving ? 'Guardando...' : 'Guardar'}
-              </button>
-              <button
-                onClick={onCancelEdit}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-              >
-                <X className="w-4 h-4" />
-                Cancelar
-              </button>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* Action buttons for each row (shown after the table) */}
-        {filteredDetails.map(item => (
-          <div key={item.id} className="flex items-center gap-2">
-            <button
-              onClick={() => onEditClick(item)}
-              className="p-1 text-blue-600 hover:text-blue-800"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onDeleteClick(item.id)}
-              disabled={isDeletingId === item.id}
-              className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
-            >
-              {isDeletingId === item.id ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        ))}
-
-        {filteredDetails.length === 0 && !isFetchingDetails && (
-          <div className="text-center py-8 text-gray-500">
-            <FileSearch className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No se encontraron movimientos para este período.</p>
-          </div>
+            {filteredDetails.length === 0 && !isFetchingDetails && (
+              <div className="text-center py-12 text-[var(--foreground-muted)] animate-fade-in">
+                <FileSearch className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p className="text-lg">No se encontraron movimientos para este período.</p>
+              </div>
+            )}
+          </>
         )}
-        </>
-      )}
+      </div>
     </div>
   );
 };

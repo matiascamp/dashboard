@@ -117,10 +117,11 @@ const AccountingEntry = () => {
           <PageBlockLoader label="Cargando asientos contables..." className="mb-8" />
         ) : (
         <div className="grid md:grid-cols-4 gap-6 mb-8 animate-scale-in">
+          {/* Períodos Card */}
           <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 shadow-[var(--shadow-md)]">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-blue-500/10 rounded-xl">
-                <Calendar className="h-6 w-6 text-blue-500" />
+              <div className="p-3 bg-[var(--info-bg)] rounded-xl">
+                <Calendar className="h-6 w-6 text-[var(--info)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--foreground-muted)]">Períodos</p>
@@ -128,41 +129,44 @@ const AccountingEntry = () => {
               </div>
             </div>
           </div>
+          {/* Total Debe Card */}
           <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 shadow-[var(--shadow-md)]">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-red-500/10 rounded-xl">
-                <TrendingDown className="h-6 w-6 text-red-500" />
+              <div className="p-3 bg-[var(--error-bg)] rounded-xl">
+                <TrendingDown className="h-6 w-6 text-[var(--error)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--foreground-muted)]">Total Debe</p>
-                <p className="text-2xl font-bold text-red-500">${stats.totalDebit.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-[var(--error)]">${stats.totalDebit.toLocaleString()}</p>
               </div>
             </div>
           </div>
+          {/* Total Haber Card */}
           <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-6 shadow-[var(--shadow-md)]">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-green-500/10 rounded-xl">
-                <TrendingUp className="h-6 w-6 text-green-500" />
+              <div className="p-3 bg-[var(--success-bg)] rounded-xl">
+                <TrendingUp className="h-6 w-6 text-[var(--success)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--foreground-muted)]">Total Haber</p>
-                <p className="text-2xl font-bold text-green-500">${stats.totalHavings.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-[var(--success)]">${stats.totalHavings.toLocaleString()}</p>
               </div>
             </div>
           </div>
+          {/* Balance Final Card */}
           <div className={`bg-[var(--card-bg)] border-2 rounded-2xl p-6 shadow-[var(--shadow-md)] ${total >= 0
-            ? 'border-green-500/30 bg-green-500/5'
-            : 'border-red-500/30 bg-red-500/5'
+            ? 'border-[var(--success)]/30 bg-[var(--success-bg)]'
+            : 'border-[var(--error)]/30 bg-[var(--error-bg)]'
             }`}>
             <div className="flex items-center space-x-3">
-              <div className={`p-3 rounded-xl ${total >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'
+              <div className={`p-3 rounded-xl ${total >= 0 ? 'bg-[var(--success-bg)]' : 'bg-[var(--error-bg)]'
                 }`}>
-                <DollarSign className={`h-6 w-6 ${total >= 0 ? 'text-green-500' : 'text-red-500'
+                <DollarSign className={`h-6 w-6 ${total >= 0 ? 'text-[var(--success)]' : 'text-[var(--error)]'
                   }`} />
               </div>
               <div>
                 <p className="text-sm text-[var(--foreground-muted)]">Balance Final</p>
-                <p className={`text-2xl font-bold ${total >= 0 ? 'text-green-500' : 'text-red-500'
+                <p className={`text-2xl font-bold ${total >= 0 ? 'text-[var(--success)]' : 'text-[var(--error)]'
                   }`}>
                   ${total.toLocaleString()}
                 </p>
