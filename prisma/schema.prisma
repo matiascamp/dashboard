@@ -39,8 +39,8 @@ model Budgets {
   createdDate DateTime
   clientName  String
   pdfUrl      String
-  labor       Float    @default(0)
-  iva         Float    @default(0)
+  labor       Float?
+  iva         Float?
 }
 
 model User {
