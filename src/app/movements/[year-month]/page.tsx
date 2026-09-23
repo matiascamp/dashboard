@@ -203,9 +203,24 @@ const MovementsDetails = () => {
     { accessorKey: 'name', header: 'Nombre' },
     { accessorKey: 'description', header: 'Descripción' },
     { accessorKey: 'amount', header: 'Monto' },
-    { accessorKey: 'type', header: 'Tipo' },
+    { 
+      accessorKey: 'type', 
+      header: 'Tipo',
+      cell: (info: Info) => {
+        const type = info.getValue() as 'incoming' | 'outcoming';
+        return type === 'incoming' ? 'Ingreso' : 'Salida';
+      }
+    },
     { accessorKey: 'date', header: 'Fecha' },
-    { accessorKey: 'invoice', header: 'Factura' },
+    { 
+      accessorKey: 'invoice', 
+      header: 'Factura',
+      cell: (info: Info) => {
+        const invoice = info.getValue() as string | undefined | null;
+        if (!invoice || invoice === '-') return 'Por facturar';
+        return invoice === 'a facturar' ? 'A facturar' : 'No factura';
+      }
+    },
     { 
       accessorKey: 'actions', 
       header: 'Acciones',

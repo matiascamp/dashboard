@@ -10,10 +10,10 @@ const FormMovements = () => {
         name: '',
         amount: 0.01,
         description: '',
-        type: 'incoming',
+        type: 'incoming' as 'incoming' | 'outcoming',
         currency: 'ARS' as 'ARS' | 'USD',
         dollarRate: 0,
-        invoice: 'a facturar'
+        invoice: 'a facturar' as 'a facturar' | 'no factura'
     })
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -62,15 +62,15 @@ const FormMovements = () => {
             } else {
                 toast.success('Movimiento registrado correctamente')
             }
-setFormData({
-    name: '',
-    amount: 0.01,
-    description: '',
-    type: 'incoming',
-    currency: 'ARS',
-    dollarRate: 0,
-    invoice: 'a facturar'
-})
+            setFormData({
+                name: '',
+                amount: 0.01,
+                description: '',
+                type: 'incoming',
+                currency: 'ARS' as 'ARS' | 'USD',
+                dollarRate: 0,
+                invoice: 'a facturar' as 'a facturar' | 'no factura'
+            })
         } catch (error) {
             console.error('Error al intentar registrar movimiento', error);
             toast.error(error instanceof Error ? error.message : 'No se pudo registrar el movimiento')
@@ -120,8 +120,8 @@ setFormData({
                                             transition-all duration-200
                                             appearance-none cursor-pointer"
                                     >
-                                        <option value="a facturar">a facturar</option>
-                                        <option value="no factura">no factura</option>
+                                        <option value="a facturar">A facturar</option>
+                                        <option value="no factura">No factura</option>
                                     </select>
                                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                                         <svg className="w-5 h-5 text-[var(--foreground-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
@@ -160,34 +160,34 @@ setFormData({
                                     {errors.amount && <p className="absolute text-red-500 text-sm mt-1">{errors.amount}</p>}
                                 </div>
                             </div>
-<div className="space-y-2">
-    <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="name">
-        Nombre
-    </label>
-    <input
-        type="text"
-        id="name"
-        value={formData.name}
-        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-        placeholder="Ej. Compra de insumos"
-        className="
-            w-full pl-4 pr-4 py-3
-            bg-[var(--input-bg)]
-            border border-[var(--border)]
-            rounded-xl
-            text-[var(--foreground)]
-            focus:border-[var(--primary)]
-            transition-all duration-200
-        "
-    />
-    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-</div>
-<div className="space-y-2">
-    <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="description">
-        Descripción
-    </label>
-    <div className="relative">
-        <FileText className="absolute left-3 top-3 h-5 w-5 text-[var(--foreground-muted)]" />
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="name">
+                                    Nombre
+                                </label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                    placeholder="Ej. Compra de insumos"
+                                    className="
+                                        w-full pl-4 pr-4 py-3
+                                        bg-[var(--input-bg)]
+                                        border border-[var(--border)]
+                                        rounded-xl
+                                        text-[var(--foreground)]
+                                        focus:border-[var(--primary)]
+                                        transition-all duration-200
+                                    "
+                                />
+                                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="description">
+                                    Descripción
+                                </label>
+                                <div className="relative">
+                                    <FileText className="absolute left-3 top-3 h-5 w-5 text-[var(--foreground-muted)]" />
                                     <textarea
                                         id="description"
                                         name="description"
@@ -222,11 +222,11 @@ setFormData({
                                         id="currency"
                                         name="currency"
                                         value={formData.currency}
-onChange={e => setFormData(prev => ({
-    ...prev,
-    currency: e.target.value as "ARS" | "USD",
-    dollarRate: e.target.value === "USD" ? (prev.dollarRate || 1) : 0
-}))}
+                                        onChange={e => setFormData(prev => ({
+                                            ...prev,
+                                            currency: e.target.value as "ARS" | "USD",
+                                            dollarRate: e.target.value === "USD" ? (prev.dollarRate || 1) : 0
+                                        }))}
                                         className="
                                             w-full pl-4 pr-10 py-3 
                                             bg-[var(--input-bg)] 
@@ -260,7 +260,7 @@ onChange={e => setFormData(prev => ({
                                             name="dollar-rate"
                                             placeholder="0.00"
                                             step="0.01"
-min="0.01"
+                                            min="0.01"
                                             value={formData.dollarRate}
                                             onChange={e => setFormData(prev => ({
                                                 ...prev,
@@ -294,7 +294,7 @@ min="0.01"
                                         id="type-movement"
                                         name="type-movement"
                                         value={formData.type}
-                                        onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as "incoming" | "outcoming" }))}
+                                        onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as 'incoming' | 'outcoming' }))}
                                         className="
                                             w-full pl-4 pr-10 py-3 
                                             bg-[var(--input-bg)] 
@@ -306,8 +306,8 @@ min="0.01"
                                             transition-all duration-200
                                             appearance-none cursor-pointer"
                                     >
-                                        <option value="incoming">💰 Ingreso</option>
-                                        <option value="outcoming">💸 Egreso</option>
+                                        <option value="incoming">Ingreso</option>
+                                        <option value="outcoming">Egreso</option>
                                     </select>
                                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                                         <svg className="w-5 h-5 text-[var(--foreground-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>

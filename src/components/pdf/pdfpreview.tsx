@@ -8,6 +8,7 @@ interface FormData {
   text: string;
   materialPrice: number;
   labor: number;
+  iva: number;
   total?: number;
 }
 
@@ -18,11 +19,13 @@ interface Props {
 
 export default function PdfPreview({ formData, setFormData }: Props) {
 
-  const total = +formData.materialPrice + +formData.labor;
+  const iva = Number((+formData.labor * 0.21).toFixed(2));
+  const total = +formData.materialPrice + +formData.labor + iva;
 
   useEffect(() => {
     setFormData({
       ...formData,
+      iva,
       total
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -96,6 +99,10 @@ export default function PdfPreview({ formData, setFormData }: Props) {
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="font-medium text-gray-700">Mano de obra:</span>
                   <span className="text-gray-900">${formData.labor.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="font-medium text-gray-700">I.V.A. (21%):</span>
+                  <span className="text-gray-900">${iva.toLocaleString()}</span>
                 </div>
               </div>
               <div className="bg-gray-900 text-white p-4 rounded-lg">

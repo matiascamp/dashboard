@@ -14,6 +14,7 @@ interface FormData {
   text: string;
   materialPrice: number;
   labor: number;
+  iva: number;
   total?: number;
 }
 
@@ -24,6 +25,7 @@ export default function BudgetPage() {
     text: '',
     materialPrice: 0,
     labor: 0,
+    iva: 0,
     total: 0
   });
 
@@ -80,7 +82,9 @@ export default function BudgetPage() {
         body: JSON.stringify({
           createdDate: issueDate,
           clientName: formData.client,
-          pdfUrl: data.url
+          pdfUrl: data.url,
+          labor: formData.labor,
+          iva: formData.iva
         })
       })
 

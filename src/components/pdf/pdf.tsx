@@ -7,6 +7,7 @@ export interface PDFFormData {
   text: string;
   materialPrice: number;
   labor: number;
+  iva: number;
   total?: number;
   /** ISO; fecha de emisión al generar el PDF */
   issueDate?: string;
@@ -173,7 +174,8 @@ const PdfDocument = ({ formData, images }: PdfDocumentProps) => {
   const totalPages = descriptionSegments.length;
   const material = Number(formData.materialPrice) || 0;
   const labor = Number(formData.labor) || 0;
-  const total = formData.total ?? material + labor;
+  const iva = Number((labor * 0.21).toFixed(2));
+  const total = formData.total ?? material + labor + iva;
 
   return (
     <Document>
@@ -231,6 +233,10 @@ const PdfDocument = ({ formData, images }: PdfDocumentProps) => {
                   <View style={styles.costRow}>
                     <Text>Mano de obra:</Text>
                     <Text>${labor.toLocaleString()}</Text>
+                  </View>
+                  <View style={styles.costRow}>
+                    <Text>I.V.A. (21%):</Text>
+                    <Text>${iva.toLocaleString()}</Text>
                   </View>
                   <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>TOTAL:</Text>

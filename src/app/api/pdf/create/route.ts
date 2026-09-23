@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: Request) {
     try {
         const body = await request.json()
-        const { createdDate, clientName, pdfUrl } = body
+        const { createdDate, clientName, pdfUrl, labor, iva } = body
 
         if (!createdDate || !clientName || !pdfUrl) {
             return NextResponse.json(
@@ -17,7 +17,9 @@ export async function POST(request: Request) {
             data: {
                 createdDate,
                 clientName,
-                pdfUrl
+                pdfUrl,
+                labor: Number(labor) || 0,
+                iva: Number(iva) || 0
             },
         })
 

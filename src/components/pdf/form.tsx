@@ -8,6 +8,7 @@ interface FormDataProps {
   text: string;
   materialPrice: number;
   labor: number;
+  iva: number;
 }
 
 interface Props {
@@ -47,12 +48,14 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
       setHasInteracted(true);
     }
     
-    setFormData({
+    const updated = {
       ...formData,
       [name]: name === "materialPrice" || name === "labor"
         ? parseFloat(value) 
         : value
-    });
+    };
+    updated.iva = Number((updated.labor * 0.21).toFixed(2));
+    setFormData(updated);
   };
 
   const inputFields = [
@@ -62,7 +65,8 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
       type: 'number',
       icon: Package,
       value: formData.materialPrice,
-      prefix: '$'
+      prefix: '$',
+      readOnly: false
     },
     {
       name: 'labor',
@@ -70,7 +74,17 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
       type: 'number',
       icon: Wrench,
       value: formData.labor,
-      prefix: '$'
+      prefix: '$',
+      readOnly: false
+    },
+    {
+      name: 'iva',
+      label: 'I.V.A. (21%)',
+      type: 'number',
+      icon: Wrench,
+      value: Number((formData.labor * 0.21).toFixed(2)),
+      prefix: '$',
+      readOnly: true
     }
   ];
 
@@ -164,6 +178,7 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
                   id={field.name}
                   value={field.value}
                   onChange={handleChange}
+                  readOnly={field.readOnly}
                   step="0.01"
                   min="0"
                   className={`
@@ -190,7 +205,7 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-[var(--foreground)]">Total:</span>
             <span className="text-2xl font-bold text-[var(--primary)]">
-              ${(formData.materialPrice + formData.labor).toLocaleString()}
+              ${(formData.materialPrice + formData.labor + formData.iva).toLocaleString()}
             </span>
           </div>
         </div>
