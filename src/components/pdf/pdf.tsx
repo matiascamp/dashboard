@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/alt-text */
 import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer';
+import { calcBudgetTotal, calcIva } from '@/lib/budgetTotals';
 
 export interface PDFFormData {
   budgetId: number | null;
@@ -7,6 +8,7 @@ export interface PDFFormData {
   text: string;
   materialPrice: number;
   labor: number;
+  includeIva?: boolean;
   iva: number;
   total?: number;
   /** ISO; fecha de emisión al generar el PDF */
@@ -174,8 +176,9 @@ const PdfDocument = ({ formData, images }: PdfDocumentProps) => {
   const totalPages = descriptionSegments.length;
   const material = Number(formData.materialPrice) || 0;
   const labor = Number(formData.labor) || 0;
-  const iva = Number((labor * 0.21).toFixed(2));
-  const total = formData.total ?? material + labor + iva;
+  const includeIva = formData.includeIva ?? true;
+  const iva = calcIva(labor, includeIva);
+  const total = formData.total ?? calcBudgetTotal(material, labor, includeIva);
 
   return (
     <Document>
@@ -234,10 +237,12 @@ const PdfDocument = ({ formData, images }: PdfDocumentProps) => {
                     <Text>Mano de obra:</Text>
                     <Text>${labor.toLocaleString()}</Text>
                   </View>
-                  <View style={styles.costRow}>
-                    <Text>I.V.A. (21%):</Text>
-                    <Text>${iva.toLocaleString()}</Text>
-                  </View>
+                  {includeIva && (
+                    <View style={styles.costRow}>
+                      <Text>I.V.A. (21%):</Text>
+                      <Text>${iva.toLocaleString()}</Text>
+                    </View>
+                  )}
                   <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>TOTAL:</Text>
                     <Text style={styles.totalValue}>${total.toLocaleString()}</Text>

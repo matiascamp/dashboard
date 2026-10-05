@@ -11,7 +11,9 @@ export const formDataSchema = z.object({
     .min(1, "La descripción es obligatoria"),
   materialPrice: z.number().nonnegative("Debe ser un número positivo").min(1,"El monto de materiales es obligatorio y mayor a 0"),
   labor: z.number().nonnegative("Debe ser un número positivo").min(1,"El monto de mano de obra es obligatorio y mayor a 0"),
+  includeIva: z.boolean(),
   iva: z.number().nonnegative(),
+  total: z.number().optional(),
 });
 
 export type FormData = z.infer<typeof formDataSchema>;

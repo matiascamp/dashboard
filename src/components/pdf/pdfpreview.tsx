@@ -1,16 +1,8 @@
 import Image from "next/image";
 import { useEffect } from "react";
 import { Eye, Calendar, Hash, User } from "lucide-react";
-
-interface FormData {
-  budgetId: number | null;
-  client: string;
-  text: string;
-  materialPrice: number;
-  labor: number;
-  iva: number;
-  total?: number;
-}
+import { FormData } from "@/schemas/formDataSchema";
+import { calcBudgetTotal, calcIva } from "@/lib/budgetTotals";
 
 interface Props {
   formData: FormData;
@@ -19,8 +11,8 @@ interface Props {
 
 export default function PdfPreview({ formData, setFormData }: Props) {
 
-  const iva = Number((+formData.labor * 0.21).toFixed(2));
-  const total = +formData.materialPrice + +formData.labor + iva;
+  const iva = calcIva(+formData.labor, formData.includeIva);
+  const total = calcBudgetTotal(+formData.materialPrice, +formData.labor, formData.includeIva);
 
   useEffect(() => {
     setFormData({
@@ -29,7 +21,7 @@ export default function PdfPreview({ formData, setFormData }: Props) {
       total
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.materialPrice, formData.labor]);
+  }, [formData.materialPrice, formData.labor, formData.includeIva]);
 
   return (
     <div className="w-full bg-[var(--card-bg)] rounded-2xl shadow-[var(--shadow-lg)] border border-[var(--border)] animate-scale-in">
@@ -100,10 +92,12 @@ export default function PdfPreview({ formData, setFormData }: Props) {
                   <span className="font-medium text-gray-700">Mano de obra:</span>
                   <span className="text-gray-900">${formData.labor.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="font-medium text-gray-700">I.V.A. (21%):</span>
-                  <span className="text-gray-900">${iva.toLocaleString()}</span>
-                </div>
+                {formData.includeIva && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="font-medium text-gray-700">I.V.A. (21%):</span>
+                    <span className="text-gray-900">${iva.toLocaleString()}</span>
+                  </div>
+                )}
               </div>
               <div className="bg-gray-900 text-white p-4 rounded-lg">
                 <div className="flex justify-between items-center">

@@ -6,17 +6,8 @@ import { Loader2 } from 'lucide-react';
 import { PageBlockLoader } from '@/components/page-block-loader';
 import PdfForm from '@/components/pdf/form';
 import PdfPreview from '@/components/pdf/pdfpreview';
+import { FormData } from '@/schemas/formDataSchema';
 // import Viewer from '@/components/pdf/viewer';
-
-interface FormData {
-  budgetId: number | null;
-  client: string;
-  text: string;
-  materialPrice: number;
-  labor: number;
-  iva: number;
-  total?: number;
-}
 
 export default function BudgetPage() {
   const [formData, setFormData] = useState<FormData>({
@@ -25,8 +16,8 @@ export default function BudgetPage() {
     text: '',
     materialPrice: 0,
     labor: 0,
+    includeIva: true,
     iva: 0,
-    total: 0
   });
 
   const [isGenerating, setIsGenerating] = useState(false);

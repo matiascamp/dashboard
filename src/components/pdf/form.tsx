@@ -1,18 +1,10 @@
 import { User, FileText, Package, Wrench, Download, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formDataSchema, FormData } from "@/schemas/formDataSchema";
-
-interface FormDataProps {
-  budgetId: number | null;
-  client: string;
-  text: string;
-  materialPrice: number;
-  labor: number;
-  iva: number;
-}
+import { calcBudgetTotal, calcIva } from "@/lib/budgetTotals";
 
 interface Props {
-  formData: FormDataProps;
+  formData: FormData;
   setFormData: (data: FormData) => void;
   onDownload: () => void;
   isGenerating: boolean;
@@ -41,20 +33,28 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
   }, [formData, hasInteracted]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     
     // Marcar que el usuario ha interactuado con el formulario
     if (!hasInteracted) {
       setHasInteracted(true);
     }
+
+    const includeIva =
+      type === "checkbox" && name === "includeIva"
+        ? (e.target as HTMLInputElement).checked
+        : formData.includeIva;
     
-    const updated = {
+    const updated: FormData = {
       ...formData,
-      [name]: name === "materialPrice" || name === "labor"
+      includeIva,
+      [name]: type === "checkbox"
+        ? (e.target as HTMLInputElement).checked
+        : name === "materialPrice" || name === "labor"
         ? parseFloat(value) 
         : value
     };
-    updated.iva = Number((updated.labor * 0.21).toFixed(2));
+    updated.iva = calcIva(Number(updated.labor) || 0, updated.includeIva);
     setFormData(updated);
   };
 
@@ -77,15 +77,6 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
       prefix: '$',
       readOnly: false
     },
-    {
-      name: 'iva',
-      label: 'I.V.A. (21%)',
-      type: 'number',
-      icon: Wrench,
-      value: Number((formData.labor * 0.21).toFixed(2)),
-      prefix: '$',
-      readOnly: true
-    }
   ];
 
   return (
@@ -201,11 +192,59 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
           );
         })}
 
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-3">
+          <label htmlFor="includeIva" className="text-sm font-medium text-[var(--foreground)]">
+            Incluir I.V.A. (21% sobre mano de obra)
+          </label>
+          <input
+            type="checkbox"
+            name="includeIva"
+            id="includeIva"
+            checked={formData.includeIva}
+            onChange={handleChange}
+            className="h-5 w-5 accent-[var(--primary)] cursor-pointer"
+          />
+        </div>
+
+        {formData.includeIva && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="iva">
+              I.V.A. (21%)
+            </label>
+            <div className="relative">
+              <Wrench className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[var(--foreground-muted)]" />
+              <span className="absolute left-10 top-1/2 transform -translate-y-1/2 text-[var(--foreground-muted)]">
+                $
+              </span>
+              <input
+                type="number"
+                name="iva"
+                id="iva"
+                value={calcIva(formData.labor, true)}
+                readOnly
+                step="0.01"
+                min="0"
+                className="
+                  w-full pl-16 pr-4 py-3 
+                  bg-[var(--input-bg)] 
+                  border border-[var(--border)]
+                  rounded-xl
+                  text-[var(--foreground)]
+                  placeholder:text-[var(--foreground-muted)]
+                  focus:border-[var(--primary)]
+                  focus:ring-0
+                  transition-all duration-200
+                "
+              />
+            </div>
+          </div>
+        )}
+
         <div className="pt-4 border-t border-[var(--border)]">
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-[var(--foreground)]">Total:</span>
             <span className="text-2xl font-bold text-[var(--primary)]">
-              ${(formData.materialPrice + formData.labor + formData.iva).toLocaleString()}
+              ${calcBudgetTotal(formData.materialPrice, formData.labor, formData.includeIva).toLocaleString()}
             </span>
           </div>
         </div>
