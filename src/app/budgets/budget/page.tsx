@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { PageBlockLoader } from '@/components/page-block-loader';
 import PdfForm from '@/components/pdf/form';
 import PdfPreview from '@/components/pdf/pdfpreview';
-import { FormData } from '@/schemas/formDataSchema';
+import type { FormData } from '@/schemas/formDataSchema';
 // import Viewer from '@/components/pdf/viewer';
 
 export default function BudgetPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     budgetId: null,
     client: '',
@@ -22,6 +24,8 @@ export default function BudgetPage() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [images, setImages] = useState<File[]>([]);
+  const [isCompressingImages, setIsCompressingImages] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -44,15 +48,18 @@ export default function BudgetPage() {
     })()
   }, [])
 
-  const handleDownload = async () => {
+  const handleGenerateAndSave = async () => {
     setIsGenerating(true);
     try {
       const issueDate = new Date().toISOString()
 
+      const requestBody = new FormData();
+      requestBody.set('payload', JSON.stringify({ ...formData, issueDate }));
+      images.forEach((image) => requestBody.append('images', image, image.name));
+
       const response = await fetch('/api/pdf/generatePdf', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, issueDate })
+        body: requestBody,
       });
 
       const data = await response.json()
@@ -91,7 +98,7 @@ export default function BudgetPage() {
       toast.success('Presupuesto creado', {
         description: 'El archivo se generó y quedó guardado en el historial.',
       })
-      window.open(data.url);
+      router.push('/budgets');
     } catch (error) {
       console.error('Error al generar pdf:', error);
       toast.error('Ocurrió un error al generar o guardar el presupuesto')
@@ -120,8 +127,12 @@ export default function BudgetPage() {
             <PdfForm
               formData={formData}
               setFormData={setFormData}
-              onDownload={handleDownload}
+              onGenerateAndSave={handleGenerateAndSave}
               isGenerating={isGenerating}
+              images={images}
+              setImages={setImages}
+              isCompressingImages={isCompressingImages}
+              setIsCompressingImages={setIsCompressingImages}
             />
           </div>
           <div className={`relative flex-1 ${isBootstrapping ? 'pointer-events-none opacity-40' : ''}`}>

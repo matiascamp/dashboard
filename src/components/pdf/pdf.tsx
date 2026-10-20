@@ -17,6 +17,7 @@ export interface PDFFormData {
 
 interface PdfDocumentProps {
   formData: PDFFormData;
+  attachments?: string[];
   images: {
     logo: string;
     igIcon: string;
@@ -80,6 +81,56 @@ const styles = StyleSheet.create({
     color: '#6b7280'
   }
 });
+
+interface BudgetSummaryProps {
+  material: number;
+  labor: number;
+  iva: number;
+  total: number;
+  includeIva: boolean;
+  images: PdfDocumentProps['images'];
+}
+
+const BudgetSummary = ({ material, labor, iva, total, includeIva, images }: BudgetSummaryProps) => (
+  <>
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Desglose de Costos</Text>
+      <View style={styles.costRow}>
+        <Text>Precio de materiales:</Text>
+        <Text>${material.toLocaleString()}</Text>
+      </View>
+      <View style={styles.costRow}>
+        <Text>Mano de obra:</Text>
+        <Text>${labor.toLocaleString()}</Text>
+      </View>
+      {includeIva && (
+        <View style={styles.costRow}>
+          <Text>I.V.A. (21%):</Text>
+          <Text>${iva.toLocaleString()}</Text>
+        </View>
+      )}
+      <View style={styles.totalRow}>
+        <Text style={styles.totalLabel}>TOTAL:</Text>
+        <Text style={styles.totalValue}>${total.toLocaleString()}</Text>
+      </View>
+    </View>
+
+    <View style={styles.footer}>
+      <View style={styles.socialRow}>
+        <Image src={images.igIcon} style={{ width: 16, height: 16 }} />
+        <Text>@herreriadelplata</Text>
+      </View>
+      <View style={styles.socialRow}>
+        <Image src={images.phoneIcon} style={{ width: 16, height: 16 }} />
+        <Text>Contacto telefónico disponible</Text>
+      </View>
+      <View style={styles.socialRow}>
+        <Image src={images.facebookIcon} style={{ width: 16, height: 16 }} />
+        <Text>Herreria_del_plata</Text>
+      </View>
+    </View>
+  </>
+);
 
 /**
  * Cupos de caracteres por tipo de hoja (A4, @react-pdf/renderer).
@@ -171,9 +222,14 @@ const splitDescriptionForPdfPages = (raw: string): string[] => {
   return segments;
 };
 
-const PdfDocument = ({ formData, images }: PdfDocumentProps) => {
+const PdfDocument = ({ formData, images, attachments = [] }: PdfDocumentProps) => {
   const descriptionSegments = splitDescriptionForPdfPages(formData.text);
-  const totalPages = descriptionSegments.length;
+  const imagePages: string[][] = [];
+  for (let index = 0; index < attachments.length; index += 2) {
+    imagePages.push(attachments.slice(index, index + 2));
+  }
+  const descriptionPageCount = descriptionSegments.length;
+  const totalPages = descriptionPageCount + imagePages.length + (imagePages.length > 0 ? 1 : 0);
   const material = Number(formData.materialPrice) || 0;
   const labor = Number(formData.labor) || 0;
   const includeIva = formData.includeIva ?? true;
@@ -224,47 +280,9 @@ const PdfDocument = ({ formData, images }: PdfDocumentProps) => {
               </View>
             </View>
 
-            {/* Desglose de Costos (solo en la última página) */}
-            {index === totalPages - 1 && (
-              <>
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Desglose de Costos</Text>
-                  <View style={styles.costRow}>
-                    <Text>Precio de materiales:</Text>
-                    <Text>${material.toLocaleString()}</Text>
-                  </View>
-                  <View style={styles.costRow}>
-                    <Text>Mano de obra:</Text>
-                    <Text>${labor.toLocaleString()}</Text>
-                  </View>
-                  {includeIva && (
-                    <View style={styles.costRow}>
-                      <Text>I.V.A. (21%):</Text>
-                      <Text>${iva.toLocaleString()}</Text>
-                    </View>
-                  )}
-                  <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>TOTAL:</Text>
-                    <Text style={styles.totalValue}>${total.toLocaleString()}</Text>
-                  </View>
-                </View>
-
-                {/* Footer (solo en la última página) */}
-                <View style={styles.footer}>
-                  <View style={styles.socialRow}>
-                    <Image src={images.igIcon} style={{ width: 16, height: 16 }} />
-                    <Text>@herreriadelplata</Text>
-                  </View>
-                  <View style={styles.socialRow}>
-                    <Image src={images.phoneIcon} style={{ width: 16, height: 16 }} />
-                    <Text>Contacto telefónico disponible</Text>
-                  </View>
-                  <View style={styles.socialRow}>
-                    <Image src={images.facebookIcon} style={{ width: 16, height: 16 }} />
-                    <Text>Herreria_del_plata</Text>
-                  </View>
-                </View>
-              </>
+            {/* Keep the existing last description page layout when there are no attachments. */}
+            {index === descriptionPageCount - 1 && imagePages.length === 0 && (
+              <BudgetSummary material={material} labor={labor} iva={iva} total={total} includeIva={includeIva} images={images} />
             )}
 
             {/* Número de página */}
@@ -273,6 +291,38 @@ const PdfDocument = ({ formData, images }: PdfDocumentProps) => {
         </View>
       </Page>
     ))}
+    {imagePages.length > 0 && (
+      <Page size="A4" key="budget-summary">
+        <View style={styles.container}>
+          <View style={styles.innerCard}>
+            <BudgetSummary material={material} labor={labor} iva={iva} total={total} includeIva={includeIva} images={images} />
+            <Text style={styles.pageNumber}>Página {descriptionPageCount + 1} de {totalPages}</Text>
+          </View>
+        </View>
+      </Page>
+    )}
+    {imagePages.map((pageImages, pageIndex) => {
+      const pageNumber = descriptionPageCount + pageIndex + 2;
+      return (
+        <Page size="A4" key={`images-${pageIndex}`}>
+          <View style={styles.container}>
+            <View style={styles.innerCard}>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Imágenes de referencia</Text>
+                <View style={{ gap: 16 }}>
+                  {pageImages.map((attachment, imageIndex) => (
+                    <View key={`${pageIndex}-${imageIndex}`} style={{ height: 310, justifyContent: 'center', alignItems: 'center' }}>
+                      <Image src={attachment} style={{ width: '100%', height: 300, objectFit: 'contain' }} />
+                    </View>
+                  ))}
+                </View>
+              </View>
+              <Text style={styles.pageNumber}>Página {pageNumber} de {totalPages}</Text>
+            </View>
+          </View>
+        </Page>
+      );
+    })}
   </Document>
 )};
 

@@ -1,19 +1,44 @@
-import { User, FileText, Package, Wrench, Download, Loader2 } from "lucide-react";
+import { User, FileText, Package, Wrench, Save, Loader2, ImagePlus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formDataSchema, FormData } from "@/schemas/formDataSchema";
 import { calcBudgetTotal, calcIva } from "@/lib/budgetTotals";
+import { compressBudgetImage } from "@/lib/compressBudgetImage";
+import { toast } from 'sonner';
 
 interface Props {
   formData: FormData;
   setFormData: (data: FormData) => void;
-  onDownload: () => void;
+  onGenerateAndSave: () => void;
   isGenerating: boolean;
+  images: File[];
+  setImages: (images: File[]) => void;
+  isCompressingImages: boolean;
+  setIsCompressingImages: (isCompressing: boolean) => void;
 }
 
-export default function PdfForm({ formData, setFormData, onDownload, isGenerating }: Props) {
+const MAX_IMAGES = 6;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+export default function PdfForm({
+  formData,
+  setFormData,
+  onGenerateAndSave,
+  isGenerating,
+  images,
+  setImages,
+  isCompressingImages,
+  setIsCompressingImages,
+}: Props) {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  useEffect(() => {
+    const urls = images.map((image) => URL.createObjectURL(image));
+    setImagePreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [images]);
 
   useEffect(() => {
     // Solo validar después de que el usuario haya interactuado con el formulario
@@ -56,6 +81,44 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
     };
     updated.iva = calcIva(Number(updated.labor) || 0, updated.includeIva);
     setFormData(updated);
+  };
+
+  const handleImageSelection = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files ?? []);
+    event.target.value = '';
+    if (!selectedFiles.length) return;
+
+    if (images.length + selectedFiles.length > MAX_IMAGES) {
+      toast.error(`Podés agregar hasta ${MAX_IMAGES} imágenes.`);
+      return;
+    }
+
+    const invalidType = selectedFiles.find((file) => file.type !== 'image/jpeg' && file.type !== 'image/png');
+    if (invalidType) {
+      toast.error('Elegí imágenes en formato JPG o PNG.');
+      return;
+    }
+
+    const oversized = selectedFiles.find((file) => file.size > MAX_IMAGE_SIZE);
+    if (oversized) {
+      toast.error('Cada imagen original puede pesar hasta 5 MB.');
+      return;
+    }
+
+    setIsCompressingImages(true);
+    try {
+      const compressedFiles = await Promise.all(selectedFiles.map(compressBudgetImage));
+      const tooLarge = compressedFiles.find((file) => file.size > MAX_IMAGE_SIZE);
+      if (tooLarge) {
+        toast.error('Una imagen sigue superando los 5 MB después de comprimirla.');
+        return;
+      }
+      setImages([...images, ...compressedFiles]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudieron comprimir las imágenes.');
+    } finally {
+      setIsCompressingImages(false);
+    }
   };
 
   const inputFields = [
@@ -147,6 +210,65 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
             />
             {errors.text && <p className="absolute text-red-500 text-sm mt-1">{errors.text}</p>}
           </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <label className="text-sm font-medium text-[var(--foreground)]" htmlFor="budget-images">
+                Imágenes de referencia
+              </label>
+              <p className="mt-1 text-xs text-[var(--foreground-muted)]">
+                Hasta 6 imágenes JPG o PNG. Se comprimen antes de agregarse al PDF.
+              </p>
+            </div>
+            <span className="shrink-0 text-xs tabular-nums text-[var(--foreground-muted)]">
+              {images.length}/{MAX_IMAGES}
+            </span>
+          </div>
+          <label
+            htmlFor="budget-images"
+            className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--border)] bg-[var(--input-bg)] px-4 py-4 text-sm font-medium text-[var(--foreground-secondary)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] ${images.length >= MAX_IMAGES || isCompressingImages || isGenerating ? 'pointer-events-none opacity-50' : ''}`}
+          >
+            {isCompressingImages ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+            <span>{isCompressingImages ? 'Comprimiendo imágenes…' : 'Seleccionar imágenes'}</span>
+          </label>
+          <input
+            id="budget-images"
+            type="file"
+            accept="image/jpeg,image/png"
+            multiple
+            onChange={handleImageSelection}
+            disabled={images.length >= MAX_IMAGES || isCompressingImages || isGenerating}
+            className="sr-only"
+          />
+          {images.length > 0 && (
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {images.map((image, index) => (
+                <li key={`${image.name}-${index}`} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--input-bg)]">
+                  <div className="relative aspect-[4/3] bg-white">
+                    {imagePreviews[index] && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={imagePreviews[index]} alt={`Vista previa de ${image.name}`} className="h-full w-full object-contain" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setImages(images.filter((_, imageIndex) => imageIndex !== index))}
+                      disabled={isGenerating || isCompressingImages}
+                      aria-label={`Quitar ${image.name}`}
+                      className="absolute right-2 top-2 rounded-full bg-black/70 p-1.5 text-white transition-colors hover:bg-black disabled:opacity-50"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 px-2.5 py-2 text-xs text-[var(--foreground-secondary)]">
+                    <span className="truncate" title={image.name}>{image.name}</span>
+                    <span className="shrink-0 tabular-nums">{(image.size / 1024).toFixed(0)} KB</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {inputFields.map((field) => {
@@ -249,8 +371,8 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
           </div>
         </div>
         <button
-          onClick={onDownload}
-          disabled={isGenerating || !formData.client.trim() ||  Object.keys(errors).length > 0}
+          onClick={onGenerateAndSave}
+          disabled={isGenerating || isCompressingImages || !formData.client.trim() || Object.keys(errors).length > 0}
           className="
             w-full flex items-center justify-center space-x-2 py-3 px-4
             bg-[var(--primary)] hover:bg-[var(--primary-hover)]
@@ -261,15 +383,20 @@ export default function PdfForm({ formData, setFormData, onDownload, isGeneratin
             transform hover:scale-[1.02] active:scale-[0.98]
           "
         >
-          {isGenerating ? (
+          {isCompressingImages ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Comprimiendo imágenes...</span>
+            </>
+          ) : isGenerating ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
               <span>Generando PDF...</span>
             </>
           ) : (
             <>
-              <Download className="h-5 w-5" />
-              <span>Descargar PDF</span>
+              <Save className="h-5 w-5" />
+              <span>Generar y guardar PDF</span>
             </>
           )}
         </button>

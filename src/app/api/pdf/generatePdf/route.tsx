@@ -43,16 +43,49 @@ const toBufferFromStream = async (stream:any): Promise<Buffer> => {
 
 export const POST = async (request: NextRequest) => {
   try {
-    const formData: PDFFormData = await request.json();
+    const requestFormData = await request.formData();
+    const payload = requestFormData.get('payload');
+    if (typeof payload !== 'string') {
+      return NextResponse.json({ error: 'Faltan los datos del presupuesto' }, { status: 400 });
+    }
 
+    let formData: PDFFormData;
+    try {
+      formData = JSON.parse(payload) as PDFFormData;
+    } catch {
+      return NextResponse.json({ error: 'Los datos del presupuesto no son válidos' }, { status: 400 });
+    }
+
+    const uploadedImages = requestFormData.getAll('images');
+    if (uploadedImages.length > 6) {
+      return NextResponse.json({ error: 'Podés agregar hasta 6 imágenes.' }, { status: 400 });
+    }
+
+    const attachments: string[] = [];
+    for (const entry of uploadedImages) {
+      if (typeof entry === 'string' || entry.type !== 'image/jpeg' || entry.size > 5 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: 'Las imágenes deben estar comprimidas en JPG y pesar hasta 5 MB cada una.' },
+          { status: 400 },
+        );
+      }
+
+      const imageBuffer = Buffer.from(await entry.arrayBuffer());
+      if (imageBuffer.length < 3 || imageBuffer[0] !== 0xff || imageBuffer[1] !== 0xd8 || imageBuffer[2] !== 0xff) {
+        return NextResponse.json({ error: 'Una de las imágenes JPG no es válida.' }, { status: 400 });
+      }
+      attachments.push(`data:image/jpeg;base64,${imageBuffer.toString('base64')}`);
+    }
+
+    const assetBaseUrl = request.nextUrl.origin.replace(/\/$/, '');
     const images = {
-      logo: `${process.env.BASE_URL}/logo.jpg`,
-      igIcon: `${process.env.BASE_URL}/instagram_icon.png`,
-      phoneIcon: `${process.env.BASE_URL}/phone_icon.png`,
-      facebookIcon: `${process.env.BASE_URL}/facebook_icon.png`,
+      logo: `${assetBaseUrl}/logo.jpg`,
+      igIcon: `${assetBaseUrl}/instagram_icon.png`,
+      phoneIcon: `${assetBaseUrl}/phone_icon.png`,
+      facebookIcon: `${assetBaseUrl}/facebook_icon.png`,
     };
 
-    const pdfStream = await pdf(<PdfDocument formData={formData} images={images} />).toBuffer();
+    const pdfStream = await pdf(<PdfDocument formData={formData} images={images} attachments={attachments} />).toBuffer();
     const pdfBuffer = await toBufferFromStream(pdfStream);
     
   
